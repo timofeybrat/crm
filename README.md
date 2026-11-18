@@ -8,9 +8,10 @@ Alembic, Pydantic, PostgreSQL; Docker Compose. Redis доступен отдел
 
 Инициализированы приложения, FSD-структура, конфигурация миграций, зависимости
 с lock-файлами, Dockerfile и Compose. Backend предоставляет GET /health и GET /ready.
-Frontend показывает стартовую страницу. Бизнес-эндпоинты, ORM-модели, бизнес-миграции,
-формы CRM, seed менеджеров и бизнес-тесты пока не реализованы.
-Два теста инфраструктуры не заменяют минимум пять бизнес-тестов из задания.
+Frontend показывает стартовую страницу. ORM-модели и первая миграция готовы:
+PostgreSQL защищает длительность, пересечения менеджера и активную встречу организации.
+Есть идемпотентный seed менеджеров и интеграционные тесты ограничений на отдельной БД.
+Бизнес-эндпоинты и формы CRM пока не реализованы.
 REFLECTION.md будет написан по фактическим результатам реализации.
 
 Рекомендации и спорные требования: [docs/architecture.md](docs/architecture.md).
@@ -32,8 +33,13 @@ docker compose up --build
 - Liveness: http://localhost:8000/health
 - Readiness (соединение с PostgreSQL): http://localhost:8000/ready
 
-Compose запускает миграции перед API. Пока ревизий нет: Alembic настроен,
-но предметные таблицы ещё не создаются. Схема придёт вместе с бизнес-модулями.
+Compose запускает миграции перед API. Для демонстрационных менеджеров после старта:
+
+```sh
+docker compose exec backend /app/.venv/bin/python -m crm.seed
+```
+
+Команда идемпотентна; ID менеджеров 1 и 2, данные демонстрационные.
 Frontend в Compose запускается в development-режиме; после изменения файлов
 повторить команду с --build. Production target подготовлен отдельно.
 
@@ -69,6 +75,7 @@ Backend, отдельный терминал:
 cd backend
 uv sync --frozen
 uv run alembic upgrade head
+uv run python -m crm.seed
 uv run uvicorn crm.main:app --app-dir src --reload
 ```
 
@@ -89,6 +96,18 @@ npm run dev
 `frontend/.env.example` в `frontend/.env.local` и настроить API_INTERNAL_URL.
 
 ## Проверки
+
+Интеграционные тесты используют исключительно БД `crm_test` (не рабочую `crm`).
+Из корня запустить отдельную PostgreSQL с временным хранилищем:
+
+```sh
+docker compose --profile test up -d --wait postgres-test
+```
+
+Скопировать `backend/.env.test.example` в `backend/.env.test`. Можно вместо файла
+задать CRM_TEST_DATABASE_URL через окружение. Тесты применяют миграции и очищают
+предметные таблицы **только в crm_test**. При отсутствии настройки интеграционные
+тесты пропускаются с явным сообщением; для полной проверки их нельзя пропускать.
 
 Из backend:
 

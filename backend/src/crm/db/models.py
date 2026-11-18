@@ -1,4 +1,8 @@
-"""Import all module ORM models here when implemented, so Alembic discovers them.
+"""Explicit ORM registration for Alembic. No create_all at application startup."""
 
-Keep imports explicit. No automatic module discovery or create_all on startup.
-"""
+from crm.modules.calls.models import Call
+from crm.modules.companies.models import Company
+from crm.modules.managers.models import Manager
+from crm.modules.meetings.models import Meeting, MeetingHistory
+
+__all__ = ["Call", "Company", "Manager", "Meeting", "MeetingHistory"]
