@@ -4,7 +4,9 @@ from typing import Annotated
 from pydantic import Field
 
 from crm.api.schemas import ApiModel
+from crm.modules.calls.schemas import CallRead
 from crm.modules.companies.models import CompanyStatus
+from crm.modules.meetings.schemas import MeetingSummary
 
 
 class CompanyCreate(ApiModel):
@@ -24,3 +26,9 @@ class CompanyPage(ApiModel):
     total: int
     limit: int
     offset: int
+
+
+class CompanyDetail(CompanyRead):
+    active_meeting: MeetingSummary | None
+    recent_meetings: list[MeetingSummary]
+    recent_calls: list[CallRead]

@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from crm.core.errors import NotFound
+from crm.modules.companies.models import Company
 from crm.modules.managers.models import Manager
 from crm.modules.meetings.models import Meeting
 
@@ -24,10 +25,11 @@ async def list_schedule(
     manager_id: int,
     starts_at: datetime,
     ends_at: datetime,
-) -> list[Meeting]:
+) -> list[tuple[Meeting, str]]:
     return list(
-        await session.scalars(
-            select(Meeting)
+        await session.execute(
+            select(Meeting, Company.name)
+            .join(Company, Company.id == Meeting.company_id)
             .where(
                 Meeting.manager_id == manager_id,
                 Meeting.status == "scheduled",

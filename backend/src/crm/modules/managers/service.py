@@ -4,8 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from crm.core.errors import InvalidOperation
 from crm.modules.managers import repository
-from crm.modules.managers.schemas import ManagerRead, ScheduleRead
+from crm.modules.managers.schemas import ManagerRead, ScheduledMeeting, ScheduleRead
 from crm.modules.meetings.rules import ALMATY
+from crm.modules.meetings.schemas import MeetingSummary
 
 
 async def list_managers(session: AsyncSession) -> list[ManagerRead]:
@@ -28,4 +29,11 @@ async def get_schedule(
         local_start.astimezone(UTC),
         local_end.astimezone(UTC),
     )
-    return ScheduleRead(manager_id=manager_id, date=day, meetings=meetings)
+    return ScheduleRead(
+        manager_id=manager_id,
+        date=day,
+        meetings=[
+            ScheduledMeeting(**MeetingSummary.model_validate(item).model_dump(), company_name=name)
+            for item, name in meetings
+        ],
+    )

@@ -9,7 +9,11 @@ class ManagerRead(ApiModel):
     name: str
 
 
+class ScheduledMeeting(MeetingSummary):
+    company_name: str
+
+
 class ScheduleRead(ApiModel):
     manager_id: int
     date: date
-    meetings: list[MeetingSummary]
+    meetings: list[ScheduledMeeting]
