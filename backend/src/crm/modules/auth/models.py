@@ -17,3 +17,14 @@ class ManagerAccount(Base):
     role: Mapped[str] = mapped_column(String(16), default="manager", server_default="manager")
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AuthSession(Base):
+    __tablename__ = "auth_sessions"
+
+    id_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    account_id: Mapped[int | None] = mapped_column(
+        ForeignKey("manager_accounts.id", ondelete="CASCADE"), index=True
+    )
+    csrf_hash: Mapped[str] = mapped_column(String(64))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)

@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from crm.api.router import router
 from crm.core.config import Settings, get_settings
 from crm.core.errors import Conflict, DomainError, NotFound
+from crm.modules.auth.sessions import prune_sessions
 from crm.modules.video_calls.gateway import LiveKitGateway
 from crm.modules.video_calls.service import reconcile
 
@@ -40,9 +41,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 await asyncio.sleep(10)
 
         cleanup_task = asyncio.create_task(cleanup_video()) if settings.video_enabled else None
+
+        async def cleanup_auth():
+            while True:
+                await asyncio.sleep(60)
+                try:
+                    await prune_sessions(app.state.session_factory)
+                except Exception:
+                    logging.getLogger(__name__).warning("Session cleanup failed; retrying")
+
+        auth_cleanup_task = asyncio.create_task(cleanup_auth())
         try:
             yield
         finally:
+            auth_cleanup_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await auth_cleanup_task
             if cleanup_task:
                 cleanup_task.cancel()
                 with suppress(asyncio.CancelledError):
@@ -55,7 +69,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.middleware("http")
     async def video_privacy_headers(request: Request, call_next):
         response = await call_next(request)
-        if request.url.path.startswith("/video"):
+        if request.url.path not in {"/health", "/ready"}:
             response.headers["Cache-Control"] = "no-store"
             response.headers["Referrer-Policy"] = "no-referrer"
         return response
@@ -79,7 +93,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization"],
+        allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
+        allow_credentials=True,
     )
     app.include_router(router)
     return app

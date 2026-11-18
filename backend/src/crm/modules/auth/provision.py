@@ -5,11 +5,11 @@ import asyncio
 import getpass
 import re
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from crm.core.config import get_settings
-from crm.modules.auth.models import ManagerAccount
+from crm.modules.auth.models import AuthSession, ManagerAccount
 from crm.modules.auth.passwords import hash_password
 from crm.modules.managers.models import Manager
 
@@ -32,6 +32,9 @@ async def provision(manager_id: int, login: str, password: str, role: str):
             if duplicate and duplicate != account:
                 raise ValueError("Login is already assigned to another manager")
             if account:
+                await session.execute(
+                    delete(AuthSession).where(AuthSession.account_id == account.id)
+                )
                 account.login, account.password_hash, account.role = login, encoded, role
                 account.enabled = True
             else:

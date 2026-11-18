@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import SecretStr, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     bootstrap_manager_id: int = 1
     bootstrap_login: str = "manager1"
     bootstrap_password: SecretStr = SecretStr("")
+    session_cookie_secure: bool = False
+    session_ttl_seconds: int = Field(default=28800, ge=300, le=86400)
 
     @model_validator(mode="after")
     def validate_video(self):

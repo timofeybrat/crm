@@ -10,7 +10,8 @@ from crm.modules.auth.passwords import hash_password
 
 def test_credentials_case_insensitive_and_generic_failures(db, test_database_url):
     db(
-        "INSERT INTO manager_accounts (manager_id, login, password_hash) VALUES (1, 'manager1', :hash)",
+        "INSERT INTO manager_accounts (manager_id, login, password_hash) "
+        "VALUES (1, 'manager1', :hash)",
         {"hash": hash_password("public-test-password-only")},
     )
 
