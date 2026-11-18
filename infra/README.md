@@ -7,7 +7,7 @@
 `docker compose --profile redis up --build` дополнительно запускает Redis.
 Redis пока не используется приложением: кэш и очереди не нужны по ТЗ.
 
-Профиль test предоставляет отдельную PostgreSQL crm_test на порту 55433,
+Профиль test предоставляет отдельную PostgreSQL crm_test на порту 5543,
 с tmpfs вместо постоянного тома. Запуск: `docker compose --profile test up -d --wait postgres-test`.
 Если 5432 занят другим сервисом, установить POSTGRES_PORT=55432 в корневом .env
 и такой же порт в CRM_DATABASE_URL локального backend/.env.

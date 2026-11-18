@@ -70,7 +70,7 @@ services:
       POSTGRES_USER: crm_test
       POSTGRES_PASSWORD: crm_test_local_only
     ports:
-      - "127.0.0.1:55433:5432"
+      - "127.0.0.1:5543:5432"
     tmpfs:
       - /var/lib/postgresql/data
     healthcheck:
