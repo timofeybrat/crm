@@ -1,0 +1,10 @@
+@baseUrl = http://localhost:8000
+
+### Liveness
+GET {{baseUrl}}/health
+
+### PostgreSQL readiness
+GET {{baseUrl}}/ready
+
+### OpenAPI contract (business endpoints will be added during implementation)
+GET {{baseUrl}}/openapi.json
