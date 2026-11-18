@@ -48,7 +48,9 @@ def test_database_url():
 
 @pytest.fixture
 def client(db, test_database_url):
-    with TestClient(create_app(Settings(database_url=test_database_url))) as client:
+    with TestClient(
+        create_app(Settings(database_url=test_database_url, video_enabled=False))
+    ) as client:
         yield client
 
 

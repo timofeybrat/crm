@@ -7,6 +7,7 @@ from pathlib import Path
 import uvicorn
 from alembic.config import Config
 from dotenv import dotenv_values
+from pydantic import SecretStr
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -39,6 +40,21 @@ async def prepare() -> None:
                     "(1, 'Demo manager 1'), (2, 'Demo manager 2')"
                 )
             )
+            if os.getenv("CRM_E2E_VIDEO") == "1":
+                await connection.execute(
+                    text(
+                        "INSERT INTO companies (id, name, bin, phone) "
+                        "VALUES (90001, 'Video E2E company', '000000090001', '+70000000001')"
+                    )
+                )
+                await connection.execute(
+                    text(
+                        "INSERT INTO meetings (id, company_id, manager_id, starts_at, ends_at, "
+                        "original_starts_at) VALUES (90001, 90001, 1, "
+                        "now() - interval '5 minutes', "
+                        "now() + interval '55 minutes', now() - interval '5 minutes')"
+                    )
+                )
     finally:
         await engine.dispose()
 
@@ -48,4 +64,16 @@ asyncio.run(prepare())
 from crm.core.config import Settings  # noqa: E402
 from crm.main import create_app  # noqa: E402
 
-uvicorn.run(create_app(Settings(database_url=url, debug=False)), host="127.0.0.1", port=18001)
+video = os.getenv("CRM_E2E_VIDEO") == "1"
+settings = Settings(
+    database_url=url,
+    debug=False,
+    video_enabled=video,
+    livekit_url="http://localhost:17880",
+    livekit_public_url="ws://localhost:17880",
+    livekit_api_key=SecretStr("crm-e2e"),
+    livekit_api_secret=SecretStr("test-video-secret-for-disposable-local-e2e-only"),
+    video_manager_keys={1: SecretStr("test-manager-key-for-disposable-local-e2e-only")},
+    frontend_url="http://127.0.0.1:3001",
+)
+uvicorn.run(create_app(settings), host="127.0.0.1", port=18001)
