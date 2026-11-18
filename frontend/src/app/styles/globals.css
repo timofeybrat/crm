@@ -14,6 +14,8 @@ button, a { touch-action: manipulation; }
 :focus-visible { outline: 3px solid #929eea; outline-offset: 3px; }
 ::selection { background: #fbe2d5; }
 .spin { animation: spin 1s linear infinite; }
+.skip-link { position: fixed; left: 20px; top: -100px; padding: 12px; background: #fff; z-index: 200; border-radius: 8px; }.skip-link:focus { top: 10px; }
+.timeline-add:disabled { visibility: hidden; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes enter { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
 .button { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border: 1px solid transparent; border-radius: 9px; font-size: 13px; font-weight: 600; transition: background .15s, box-shadow .15s; white-space: nowrap; }
