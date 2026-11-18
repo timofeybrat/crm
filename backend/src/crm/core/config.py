@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     livekit_api_secret: SecretStr = SecretStr("")
     video_manager_keys: dict[int, SecretStr] = {}
     frontend_url: str = "http://localhost:3000"
+    bootstrap_manager_id: int = 1
+    bootstrap_login: str = "manager1"
+    bootstrap_password: SecretStr = SecretStr("")
 
     @model_validator(mode="after")
     def validate_video(self):
