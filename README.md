@@ -27,54 +27,109 @@ PostgreSQL защищает длительность, пересечения м�
 
 Нужны Docker Engine / Docker Desktop с Linux containers и Docker Compose v2.
 Конфигурация находится в `docker-compose.yml` в корне репозитория.
-Команда из корня, без обязательных предварительных файлов:
+Все команды этого раздела выполняются из корня склонированного репозитория.
+Node.js, Python и uv на компьютере для этого способа запуска не нужны.
+
+Файл `.env` необязателен: Compose использует значения по умолчанию из конфигурации.
+Если нужно изменить порты или реквизиты PostgreSQL, **перед запуском** создайте его
+из примера и отредактируйте. Существующий `.env` не перезаписывайте:
 
 ```sh
-docker compose up --build
+cp .env.example .env
 ```
+
+Запуск в фоне с пересборкой образов и ожиданием готовности сервисов:
+
+```sh
+docker compose up -d --build --wait
+```
+
+Первый запуск скачивает образы и устанавливает зависимости, поэтому может занять
+несколько минут. Команда возвращает управление терминалу; логи можно открыть отдельно:
+
+```sh
+docker compose logs -f frontend backend
+```
+
+При стандартных портах:
 
 - Приложение: http://localhost:3000
 - Swagger: http://localhost:8000/docs
 - Liveness: http://localhost:8000/health
 - Readiness (соединение с PostgreSQL): http://localhost:8000/ready
 
-Compose запускает миграции перед API. Для демонстрационных менеджеров после старта:
+Compose запускает `alembic upgrade head` перед API при старте backend-контейнера.
+При ошибке миграции Uvicorn не запускается. Для демонстрационных менеджеров после старта:
 
 ```sh
 docker compose exec backend /app/.venv/bin/python -m crm.seed
 ```
 
-Команда идемпотентна; ID менеджеров 1 и 2, данные демонстрационные.
+Команда идемпотентна; ID менеджеров 1 и 2, данные демонстрационные. Seed не запускается
+автоматически; без него на новой БД список менеджеров будет пуст.
 Frontend в Compose запускается в development-режиме; после изменения файлов
-повторить команду с --build. Production target подготовлен отдельно.
+повторите `docker compose up -d --build --wait`. Bind mounts пока не настроены,
+поэтому изменения файлов на компьютере не подхватываются контейнерами автоматически.
+Production target подготовлен отдельно, но его контейнерная проверка ещё не выполнена.
 
-Для изменения портов и параметров PostgreSQL скопировать `.env.example` в `.env`
-в корне и изменить значения. Настройки backend в Compose передаются напрямую,
-локальные `backend/.env` и `frontend/.env.local` ему не нужны.
+При изменении BACKEND_PORT/FRONTEND_PORT адреса выше меняются соответственно.
+Настройки backend и прокси frontend в Compose передаются напрямую;
+локальные `backend/.env` и `frontend/.env.local` этому способу запуска не нужны.
 Локальные пароли из примеров не использовать для публичного развёртывания.
+POSTGRES_DB/POSTGRES_USER/POSTGRES_PASSWORD инициализируют пустой том PostgreSQL.
+Изменение этих значений после первого запуска не переименует существующую БД
+и не сменит пароль уже созданного пользователя; существующую БД нужно настраивать
+отдельно либо использовать новый том.
 
 Опционально Redis:
 
 ```sh
-docker compose --profile redis up --build
+docker compose --profile redis up -d --build --wait
 ```
 
 Redis пока не подключён к backend и не нужен для работы API.
-Остановка без удаления данных: `docker compose down`.
+Остановка основного стека без удаления постоянных томов: `docker compose down`.
+Данные рабочей БД хранятся в именованном томе; не добавляйте `--volumes`, если
+хотите их сохранить. Уже запущенный сервис отдельного профиля можно остановить
+явно: `docker compose stop postgres-test` или `docker compose stop redis`.
 Дополнительные замечания: [infra/README.md](infra/README.md).
 
 ## Локальная разработка
 
-Нужны Node.js 22+, npm, Python 3.11+ и uv 0.11.8+.
+Нужны Node.js 22.18+, npm, Python 3.11+ и uv 0.11.8+.
+Node.js 22.18+ используется для выполнения TypeScript unit-тестов без отдельного runner.
 Команды npm в PowerShell при запрете скриптов можно выполнять как `npm.cmd`.
+Команды копирования ниже подходят для Git Bash; в PowerShell можно использовать
+`Copy-Item исходный-файл целевой-файл`. Уже настроенные `.env` не перезаписывайте.
 
-Запустить БД из корня:
+При первой настройке из корня создайте настройки локального backend:
 
 ```sh
-docker compose up -d postgres
+cp backend/.env.example backend/.env
 ```
 
-Backend, отдельный терминал:
+Значения примера соответствуют стандартным настройкам Compose: PostgreSQL на
+localhost:5432. Корневой `.env` читает Compose, а локальный backend — `backend/.env`;
+они не синхронизируются автоматически. Если в корневом `.env` задан, например,
+`POSTGRES_PORT=55432`, такой же порт должен быть в `CRM_DATABASE_URL` файла
+`backend/.env`. При стандартных демонстрационных реквизитах:
+
+```dotenv
+CRM_DATABASE_URL=postgresql+asyncpg://crm:crm_local_only@localhost:55432/crm
+```
+
+При изменении имени БД, пользователя или пароля обновите URL тоже. Все настройки
+backend имеют префикс CRM_. Не коммитьте реальные `.env`.
+
+Из корня остановите контейнерные приложения, если они уже занимают порты 3000/8000,
+и запустите только рабочую PostgreSQL с ожиданием готовности:
+
+```sh
+docker compose stop frontend backend
+docker compose up -d --wait postgres
+```
+
+Backend — в отдельном терминале, начиная из корня проекта:
 
 ```sh
 cd backend
@@ -84,12 +139,10 @@ uv run python -m crm.seed
 uv run uvicorn crm.main:app --app-dir src --reload
 ```
 
-Настройки по умолчанию соответствуют Compose. Для изменения скопировать
-`backend/.env.example` в `backend/.env`. Все переменные backend имеют префикс CRM_.
-Если меняются реквизиты PostgreSQL в корневом .env, обновить CRM_DATABASE_URL
-в backend/.env отдельно. Не коммитить реальные .env.
+Локально миграции применяются отдельной командой выше, а не автоматически при
+запуске Uvicorn. API: http://localhost:8000, Swagger: http://localhost:8000/docs.
 
-Frontend, ещё один терминал:
+Frontend — в ещё одном терминале, начиная из корня проекта:
 
 ```sh
 cd frontend
@@ -97,8 +150,15 @@ npm ci
 npm run dev
 ```
 
-По умолчанию прокси обращается к http://127.0.0.1:8000. Для изменения скопировать
-`frontend/.env.example` в `frontend/.env.local` и настроить API_INTERNAL_URL.
+Интерфейс: http://localhost:3000. Оба приложения подхватывают изменения исходников:
+Next.js через dev-сервер, backend через `--reload`.
+По умолчанию прокси обращается к http://127.0.0.1:8000. Для изменения перед запуском
+скопируйте `frontend/.env.example` в `frontend/.env.local`, настройте API_INTERNAL_URL
+и перезапустите Next.js. Корневые BACKEND_PORT/FRONTEND_PORT сами по себе не меняют
+порты локальных dev-серверов. Например, backend на 8001 запускается с `--port 8001`,
+а frontend на 3002 — командой `npm run dev -- --port 3002`.
+При изменении origin frontend добавьте его в CRM_CORS_ORIGINS локального backend.
+Для `npm run build` URL прокси должен быть настроен до сборки: rewrites входят в её результат.
 
 ## Интерфейс
 
@@ -141,30 +201,46 @@ GET /meetings/{id}, GET /companies/{id} и параметр search списка 
 
 ## Проверки
 
+Проверки на компьютере требуют инструментов из раздела локальной разработки,
+даже если само приложение запускается в Docker.
 Интеграционные тесты используют исключительно БД `crm_test` (не рабочую `crm`).
-Из корня запустить отдельную PostgreSQL с временным хранилищем:
+Из корня запустите отдельную PostgreSQL с временным хранилищем:
 
 ```sh
 docker compose --profile test up -d --wait postgres-test
 ```
 
-Скопировать `backend/.env.test.example` в `backend/.env.test`. Можно вместо файла
-задать CRM_TEST_DATABASE_URL через окружение. Тесты применяют миграции и очищают
-предметные таблицы **только в crm_test**. При отсутствии настройки интеграционные
-тесты пропускаются с явным сообщением; для полной проверки их нельзя пропускать.
-
-Из backend:
+При первой настройке создайте файл тестового подключения:
 
 ```sh
+cp backend/.env.test.example backend/.env.test
+```
+
+Тестовая PostgreSQL доступна на localhost:5543; внутри контейнера её порт — 5432.
+Этот порт задан в Compose отдельно от POSTGRES_PORT рабочей БД.
+Можно вместо файла задать CRM_TEST_DATABASE_URL через окружение.
+Тесты применяют миграции и очищают
+предметные таблицы **только в crm_test**. При отсутствии настройки интеграционные
+тесты пропускаются с явным сообщением; для полной проверки их нельзя пропускать.
+Хранилище postgres-test — tmpfs, поэтому тестовые данные не сохраняются после
+остановки контейнера.
+
+Backend-проверки — в отдельном терминале из корня:
+
+```sh
+cd backend
+uv sync --frozen
 uv run pytest -q
 uv run ruff check .
 uv run ruff format --check .
 uv run alembic upgrade head --sql
 ```
 
-Из frontend:
+Frontend-проверки — в отдельном терминале из корня:
 
 ```sh
+cd frontend
+npm ci
 npm run lint
 npm run typecheck
 npm run format:check
@@ -178,7 +254,23 @@ npm run build
 
 ### Браузерные тесты
 
-После запуска тестовой PostgreSQL и настройки `backend/.env.test`, из frontend:
+Сначала выполните шаги запуска тестовой PostgreSQL и настройки `backend/.env.test`
+из раздела выше. Затем установите зависимости, начиная из корня в отдельном терминале:
+
+```sh
+uv sync --project backend --frozen
+cd frontend
+npm ci
+```
+
+На Windows нужен установленный Microsoft Edge. На Linux/macOS перед первым запуском,
+из того же терминала в frontend:
+
+```sh
+npx playwright install chromium
+```
+
+Запуск браузерных тестов, из frontend:
 
 ```sh
 npm run test:e2e
@@ -188,8 +280,8 @@ Playwright запускает отдельные API (18001) и Next.js (3001), 
 их. Рабочий API на 8000 и БД crm не затрагиваются. Тестовый сервер **очищает crm_test**,
 применяет миграции и создаёт демо-менеджеров; имя БД проверяется перед очисткой.
 Не запускать одновременно с pytest против той же тестовой БД.
-На Windows используется установленный Microsoft Edge. На Linux/macOS перед первым
-запуском установить Chromium: `npx playwright install chromium`.
+Порты 18001 и 3001 должны быть свободны; уже запущенные dev-серверы на этих
+портах нужно остановить.
 Скриншоты и трассы пишутся в игнорируемый `frontend/test-results`; в Git и Docker
 они не попадают. В скриншотах используются только тестовые демонстрационные записи.
 
