@@ -56,6 +56,7 @@ new, no_answer, refused, meeting_set. Новая организация имее
 | GET | /companies | status?, limit?, offset? → страница организаций |
 | POST | /meetings | {company_id, manager_id, starts_at} → встреча с историей |
 | PATCH | /meetings/{id} | action и поля действия → встреча с историей |
+| GET | /meetings/{id} | встреча с историей для повторного просмотра; расширение ТЗ |
 | POST | /calls | {company_id, result, meeting_id?} → звонок |
 | GET | /managers/{id}/schedule | date=YYYY-MM-DD → {manager_id, date, meetings} |
 | GET | /managers | список менеджеров для frontend; небольшое расширение ТЗ |

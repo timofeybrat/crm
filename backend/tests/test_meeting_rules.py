@@ -1,9 +1,11 @@
-from datetime import datetime
+import asyncio
+from datetime import date, datetime
 
 import pytest
 from pydantic import ValidationError
 
 from crm.core.errors import InvalidOperation
+from crm.modules.managers import service as manager_service
 from crm.modules.meetings.rules import meeting_end
 from crm.modules.meetings.schemas import MeetingCreate
 
@@ -33,3 +35,18 @@ def test_outside_workday_rejected(value):
 def test_only_utc_iso_datetimes_accepted(value):
     with pytest.raises(ValidationError):
         MeetingCreate(company_id=1, manager_id=1, starts_at=value)
+
+
+def test_schedule_uses_local_day_boundaries(monkeypatch):
+    async def get_manager(*args):
+        return None
+
+    async def list_schedule(session, manager, start, end):
+        assert manager == 1
+        assert start.isoformat() == "2026-11-22T19:00:00+00:00"
+        assert end.isoformat() == "2026-11-23T19:00:00+00:00"
+        return []
+
+    monkeypatch.setattr(manager_service.repository, "get_manager", get_manager)
+    monkeypatch.setattr(manager_service.repository, "list_schedule", list_schedule)
+    assert asyncio.run(manager_service.get_schedule(None, 1, date(2026, 11, 23))).meetings == []

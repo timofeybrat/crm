@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import Annotated, Literal
 
-from pydantic import PositiveInt
+from pydantic import Field, PositiveInt
 
 from crm.api.schemas import ApiModel
 from crm.modules.meetings.models import MeetingStatus
@@ -40,3 +41,23 @@ class MeetingSummary(ApiModel):
 
 class MeetingRead(MeetingSummary):
     history: list[HistoryRead]
+
+
+class RescheduleMeeting(ApiModel):
+    action: Literal["reschedule"]
+    starts_at: UtcDateTime
+    manager_id: PositiveInt | None = None
+
+
+class CancelMeeting(ApiModel):
+    action: Literal["cancel"]
+
+
+class CompleteMeeting(ApiModel):
+    action: Literal["complete"]
+
+
+MeetingPatch = Annotated[
+    RescheduleMeeting | CancelMeeting | CompleteMeeting,
+    Field(discriminator="action"),
+]
