@@ -10,6 +10,7 @@ from crm.modules.meetings import repository
 from crm.modules.meetings.models import Meeting
 from crm.modules.meetings.rules import meeting_end
 from crm.modules.meetings.schemas import MeetingCreate, MeetingPatch, MeetingRead
+from crm.modules.video_calls.service import invalidate_for_meeting
 
 
 async def create_meeting(session: AsyncSession, data: MeetingCreate) -> MeetingRead:
@@ -71,6 +72,7 @@ async def update_meeting(
             if data.action == "complete" and meeting.ends_at > datetime.now(UTC):
                 raise InvalidOperation("Meeting cannot be completed before it ends")
             meeting.status = target
+        await invalidate_for_meeting(session, meeting.id, reschedule=data.action == "reschedule")
         await session.flush()
         await repository.record_history(session, meeting, data.action, previous)
         response = await repository.read_meeting(session, meeting)

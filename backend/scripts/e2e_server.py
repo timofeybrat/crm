@@ -29,7 +29,7 @@ async def prepare() -> None:
         async with engine.begin() as connection:
             await connection.execute(
                 text(
-                    "TRUNCATE calls, meeting_history, meetings, companies, managers "
+                    "TRUNCATE video_cleanup, calls, meeting_history, meetings, companies, managers "
                     "RESTART IDENTITY CASCADE"
                 )
             )

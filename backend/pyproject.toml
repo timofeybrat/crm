@@ -13,6 +13,7 @@ dependencies = [
   "pydantic-settings>=2.7,<3",
   "redis>=5.2,<8",
   "tzdata>=2025.1",
+  "livekit-api>=1,<2",
 ]
 
 [dependency-groups]
