@@ -1,6 +1,8 @@
 import { ApiError } from "@/shared/api";
 
 const messages: Record<string, string> = {
+  "Concurrent update conflict; retry the request":
+    "Данные одновременно изменяются другим запросом. Повторите действие.",
   "Authentication required": "Сессия истекла. Войдите в CRM снова.",
   "Invalid login or password": "Неверный логин или пароль.",
   "Invalid CSRF token": "Не удалось проверить запрос. Обновите страницу и повторите действие.",

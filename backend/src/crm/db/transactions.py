@@ -1,7 +1,7 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from crm.core.errors import Conflict
@@ -24,4 +24,11 @@ async def transaction(session: AsyncSession) -> AsyncIterator[None]:
         constraint = getattr(cause, "constraint_name", None)
         if constraint in CONFLICTS:
             raise Conflict(CONFLICTS[constraint]) from exc
+        raise
+    except DBAPIError as exc:
+        state = getattr(exc.orig, "sqlstate", None)
+        if state in {"40P01", "40001"}:
+            # PostgreSQL has already selected an aborted transaction. The context
+            # rolls it back completely; the caller may safely retry the operation.
+            raise Conflict("Concurrent update conflict; retry the request") from exc
         raise
