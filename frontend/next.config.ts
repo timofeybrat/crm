@@ -2,12 +2,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  allowedDevOrigins: ["127.0.0.1"],
+  devIndicators: false,
   turbopack: { root: process.cwd() },
   async rewrites() {
-    return [{
-      source: "/api/:path*",
-      destination: `${process.env.API_INTERNAL_URL ?? "http://127.0.0.1:8000"}/:path*`,
-    }];
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${process.env.API_INTERNAL_URL ?? "http://127.0.0.1:8000"}/:path*`,
+      },
+    ];
   },
 };
 

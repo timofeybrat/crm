@@ -1,5 +1,8 @@
 export class ApiError extends Error {
-  constructor(public readonly status: number, public readonly body: unknown) {
+  constructor(
+    public readonly status: number,
+    public readonly body: unknown,
+  ) {
     super(`API request failed (${status})`);
     this.name = "ApiError";
   }
@@ -12,7 +15,9 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   if (init?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  const response = await fetch(`/api${path}`, { ...init, headers });
+  const timeout = AbortSignal.timeout(15_000);
+  const signal = init?.signal ? AbortSignal.any([init.signal, timeout]) : timeout;
+  const response = await fetch(`/api${path}`, { ...init, headers, signal });
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null);
     throw new ApiError(response.status, body);
