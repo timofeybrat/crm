@@ -14,5 +14,6 @@ __pycache__/
 .coverage
 htmlcov/
 *.tsbuildinfo
+next-env.d.ts
 test-results/
 playwright-report/
