@@ -1,3 +1,5 @@
+# Examples for VS Code REST Client. Run named requests in order on a seeded database.
+# IDs are read from previous responses. All timestamps are UTC.
 @baseUrl = http://localhost:8000
 
 ### Liveness
@@ -6,5 +8,139 @@ GET {{baseUrl}}/health
 ### PostgreSQL readiness
 GET {{baseUrl}}/ready
 
-### OpenAPI contract (business endpoints will be added during implementation)
+### Demo managers (run the seed command from README first)
+GET {{baseUrl}}/managers
+
+### Create company A — 201 on a fresh database
+# @name companyA
+POST {{baseUrl}}/companies
+Content-Type: application/json
+
+{
+  "name": "Demo organisation A",
+  "bin": "000000000001",
+  "phone": "00000"
+}
+
+### Duplicate BIN — 409
+POST {{baseUrl}}/companies
+Content-Type: application/json
+
+{
+  "name": "Duplicate demo",
+  "bin": "000000000001",
+  "phone": "00000"
+}
+
+### List with filter and pagination
+GET {{baseUrl}}/companies?status=new&limit=20&offset=0
+
+### Create a meeting: Monday 10:00–11:00 Almaty — 201
+# @name meetingA
+POST {{baseUrl}}/meetings
+Content-Type: application/json
+
+{
+  "company_id": {{companyA.response.body.$.id}},
+  "manager_id": 1,
+  "starts_at": "2026-11-23T05:00:00Z"
+}
+
+### Record meeting_set linked to that meeting — 201
+POST {{baseUrl}}/calls
+Content-Type: application/json
+
+{
+  "company_id": {{companyA.response.body.$.id}},
+  "result": "meeting_set",
+  "meeting_id": {{meetingA.response.body.$.id}}
+}
+
+### Missing meeting link — 422
+POST {{baseUrl}}/calls
+Content-Type: application/json
+
+{
+  "company_id": {{companyA.response.body.$.id}},
+  "result": "meeting_set"
+}
+
+### Manager schedule (date is local Almaty date)
+GET {{baseUrl}}/managers/1/schedule?date=2026-11-23
+
+### Create company B
+# @name companyB
+POST {{baseUrl}}/companies
+Content-Type: application/json
+
+{
+  "name": "Demo organisation B",
+  "bin": "000000000002",
+  "phone": "00000"
+}
+
+### Overlap with company A's meeting — 409
+POST {{baseUrl}}/meetings
+Content-Type: application/json
+
+{
+  "company_id": {{companyB.response.body.$.id}},
+  "manager_id": 1,
+  "starts_at": "2026-11-23T05:30:00Z"
+}
+
+### Does not fit the workday: 17:30–18:30 Almaty — 422
+POST {{baseUrl}}/meetings
+Content-Type: application/json
+
+{
+  "company_id": {{companyB.response.body.$.id}},
+  "manager_id": 2,
+  "starts_at": "2026-11-23T12:30:00Z"
+}
+
+### Record no_answer for company B — 201
+POST {{baseUrl}}/calls
+Content-Type: application/json
+
+{
+  "company_id": {{companyB.response.body.$.id}},
+  "result": "no_answer"
+}
+
+### Record refused for company B — 201 (last call sets company status)
+POST {{baseUrl}}/calls
+Content-Type: application/json
+
+{
+  "company_id": {{companyB.response.body.$.id}},
+  "result": "refused"
+}
+
+### Reschedule A to Tuesday, manager 2 — 200 with full history
+PATCH {{baseUrl}}/meetings/{{meetingA.response.body.$.id}}
+Content-Type: application/json
+
+{
+  "action": "reschedule",
+  "manager_id": 2,
+  "starts_at": "2026-11-24T06:00:00Z"
+}
+
+### Read meeting with original timestamp and history
+GET {{baseUrl}}/meetings/{{meetingA.response.body.$.id}}
+
+### Updated schedule: Tuesday, manager 2
+GET {{baseUrl}}/managers/2/schedule?date=2026-11-24
+
+### Cancel A — 200, releases the company and manager slot
+PATCH {{baseUrl}}/meetings/{{meetingA.response.body.$.id}}
+Content-Type: application/json
+
+{"action": "cancel"}
+
+### Missing entity — 404
+GET {{baseUrl}}/meetings/999999
+
+### OpenAPI
 GET {{baseUrl}}/openapi.json

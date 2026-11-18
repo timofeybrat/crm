@@ -61,7 +61,7 @@ SQLAlchemy-сессией. Не создаём отдельные копии ORM
 
 ## Данные и конкурентные назначения — план реализации
 
-Будущие таблицы: `companies`, `managers`, `calls`, `meetings`, `meeting_history`.
+Реализованные таблицы: `companies`, `managers`, `calls`, `meetings`, `meeting_history`.
 Поля БИН и телефон — строки. Проверка БИН: 12 цифр; дополнительные правила и
 уникальность БИН должны быть явно оговорены, поскольку ТЗ их не задаёт.
 Для дат встреч — timezone-aware значения и PostgreSQL TIMESTAMPTZ.
