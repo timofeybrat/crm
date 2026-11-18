@@ -12,7 +12,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ru">
-      <body><AppProviders><WorkspaceShell>{children}</WorkspaceShell><CompanyWorkspace /></AppProviders></body>
+      <body>
+        <AppProviders>
+          <WorkspaceShell>{children}</WorkspaceShell>
+          <CompanyWorkspace />
+        </AppProviders>
+      </body>
     </html>
   );
 }

@@ -1,12 +1,22 @@
 const ZONE = "Asia/Almaty";
 const partsFormatter = new Intl.DateTimeFormat("en-CA", {
-  timeZone: ZONE, year: "numeric", month: "2-digit", day: "2-digit",
-  hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
+  timeZone: ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
 });
 
 function parts(value: string | Date) {
-  return Object.fromEntries(partsFormatter.formatToParts(new Date(value))
-    .filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  return Object.fromEntries(
+    partsFormatter
+      .formatToParts(new Date(value))
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, part.value]),
+  );
 }
 
 export function almatyDate(value: string | Date = new Date()) {
@@ -25,7 +35,9 @@ export function localToUtc(day: string, time: string) {
   let guess = target;
   for (let i = 0; i < 3; i++) {
     const p = parts(new Date(guess));
-    const local = Date.parse(`${p.year.padStart(4, "0")}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}Z`);
+    const local = Date.parse(
+      `${p.year.padStart(4, "0")}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}Z`,
+    );
     guess += target - local;
   }
   return new Date(guess).toISOString();
@@ -44,7 +56,10 @@ export function isWeekday(day: string) {
 
 export function formatDate(value: string, options: Intl.DateTimeFormatOptions = {}) {
   return new Intl.DateTimeFormat("ru-RU", {
-    timeZone: ZONE, day: "numeric", month: "short", ...options,
+    timeZone: ZONE,
+    day: "numeric",
+    month: "short",
+    ...options,
   }).format(new Date(value.length === 10 ? `${value}T12:00:00Z` : value));
 }
 

@@ -12,6 +12,9 @@
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint .",
     "test": "node --experimental-strip-types --test tests/datetime.test.ts",
+    "test:e2e": "playwright test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
@@ -27,12 +30,14 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.4.6",
+    "prettier": "^3.10.1",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.0.0"
   }

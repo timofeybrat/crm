@@ -1,6 +1,12 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { localToUtc, almatyDate, almatyTime, shiftDay, isWeekday } from "../src/shared/lib/datetime.ts";
+import {
+  localToUtc,
+  almatyDate,
+  almatyTime,
+  shiftDay,
+  isWeekday,
+} from "../src/shared/lib/datetime.ts";
 
 test("meeting inputs use the Almaty zone, not the computer's zone", () => {
   assert.equal(localToUtc("2026-11-23", "09:00"), "2026-11-23T04:00:00.000Z");
