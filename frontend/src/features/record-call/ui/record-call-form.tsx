@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -22,7 +22,7 @@ export function RecordCallForm({ company, meeting, onSchedule }: { company: Comp
   const cache = useQueryClient();
   const notify = useToast();
   const form = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema), defaultValues: { result: "no_answer" } });
-  const result = form.watch("result");
+  const result = useWatch({ control: form.control, name: "result" });
   const mutation = useMutation({ mutationFn: (value: CallResult) => recordCall({ company_id: company.id, result: value,
     ...(value === "meeting_set" && meeting ? { meeting_id: meeting.id } : {}),
   }), onSuccess: async () => { await cache.invalidateQueries({ queryKey: companyKeys.all }); notify("Результат звонка сохранён"); } });
