@@ -18,8 +18,8 @@ async def get_schedule(
     day: date,
 ) -> ScheduleRead:
     await repository.get_manager(session, manager_id)
-    if day == date.max:
-        raise InvalidOperation("Schedule date must be before 9999-12-31")
+    if day in (date.min, date.max):
+        raise InvalidOperation("Schedule date is outside the supported UTC conversion range")
     local_start = datetime.combine(day, time.min, tzinfo=ALMATY)
     local_end = local_start + timedelta(days=1)
     meetings = await repository.list_schedule(

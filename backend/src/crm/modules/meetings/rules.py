@@ -30,8 +30,11 @@ UtcDateTime = Annotated[
 
 
 def meeting_end(starts_at: datetime) -> datetime:
-    local_start = starts_at.astimezone(ALMATY)
-    local_end = local_start + DURATION
+    try:
+        local_start = starts_at.astimezone(ALMATY)
+        local_end = local_start + DURATION
+    except OverflowError as exc:
+        raise InvalidOperation("Meeting date is outside the supported timezone range") from exc
     if (
         local_start.weekday() >= 5
         or local_start.time() < time(9)

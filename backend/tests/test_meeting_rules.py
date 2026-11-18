@@ -24,6 +24,7 @@ def test_workday_boundaries_allowed(value):
         "2026-11-21T05:00:00Z",
         "2026-11-22T05:00:00Z",
         "2026-11-23T12:00:00.000001Z",
+        "9999-12-31T23:00:00Z",
     ],
 )
 def test_outside_workday_rejected(value):

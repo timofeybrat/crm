@@ -119,4 +119,5 @@ def test_schedule_filters_and_sorting(client):
     assert client.get("/managers/999/schedule?date=2026-11-23").status_code == 404
     assert client.get("/managers/1/schedule?date=invalid").status_code == 422
     assert client.get("/managers/1/schedule?date=9999-12-31").status_code == 422
+    assert client.get("/managers/1/schedule?date=0001-01-01").status_code == 422
     assert len(client.get("/managers").json()) == 2
