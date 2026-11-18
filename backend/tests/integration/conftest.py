@@ -6,9 +6,13 @@ from pathlib import Path
 
 import pytest
 from dotenv import dotenv_values
+from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
+
+from crm.core.config import Settings
+from crm.main import create_app
 
 
 async def execute_sql(url: str, statement: str, params: dict | None = None):
@@ -40,6 +44,12 @@ def test_database_url():
         capture_output=True,
     )
     return url
+
+
+@pytest.fixture
+def client(db, test_database_url):
+    with TestClient(create_app(Settings(database_url=test_database_url))) as client:
+        yield client
 
 
 @pytest.fixture
