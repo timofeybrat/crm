@@ -27,9 +27,11 @@ def window(meeting: Meeting) -> tuple[datetime, datetime]:
     return meeting.starts_at - timedelta(minutes=15), meeting.ends_at + timedelta(minutes=15)
 
 
-async def owned_meeting(session: AsyncSession, meeting_id: int, manager_id: int) -> Meeting:
+async def owned_meeting(
+    session: AsyncSession, meeting_id: int, manager_id: int, *, admin=False
+) -> Meeting:
     meeting = await get_meeting(session, meeting_id, lock=True)
-    if meeting.manager_id != manager_id:
+    if meeting.manager_id != manager_id and not admin:
         raise HTTPException(403, "Video room belongs to another manager")
     return meeting
 
@@ -59,9 +61,11 @@ async def read_room(session: AsyncSession, meeting: Meeting) -> RoomRead:
     )
 
 
-async def manager_room(session: AsyncSession, meeting_id: int, manager_id: int, create=False):
+async def manager_room(
+    session: AsyncSession, meeting_id: int, manager_id: int, create=False, *, admin=False
+):
     async with transaction(session):
-        meeting = await owned_meeting(session, meeting_id, manager_id)
+        meeting = await owned_meeting(session, meeting_id, manager_id, admin=admin)
         if create:
             room = await session.get(VideoRoom, meeting_id)
             check_active(meeting, room)
@@ -74,10 +78,10 @@ async def manager_room(session: AsyncSession, meeting_id: int, manager_id: int, 
 
 
 async def issue_invitation(
-    session: AsyncSession, meeting_id: int, manager_id: int, settings: Settings
+    session: AsyncSession, meeting_id: int, manager_id: int, settings: Settings, *, admin=False
 ):
     async with transaction(session):
-        meeting = await owned_meeting(session, meeting_id, manager_id)
+        meeting = await owned_meeting(session, meeting_id, manager_id, admin=admin)
         room = await session.get(VideoRoom, meeting_id)
         check_active(meeting, room)
         if room is None:
@@ -122,15 +126,16 @@ async def connect(
     meeting_id: int | None = None,
     manager_id: int | None = None,
     invitation: str | None = None,
+    admin: bool = False,
 ):
     async with transaction(session):
         if invitation is not None:
             meeting, room = await guest_meeting(session, invitation)
             identity = "guest"
         else:
-            meeting = await owned_meeting(session, meeting_id, manager_id)
+            meeting = await owned_meeting(session, meeting_id, manager_id, admin=admin)
             room = await session.get(VideoRoom, meeting.id)
-            identity = f"manager-{manager_id}"
+            identity = f"manager-{meeting.manager_id}"
         check_active(meeting, room)
         if room is None:
             raise NotFound("Video room not found")
@@ -162,9 +167,9 @@ async def invalidate_for_meeting(session: AsyncSession, meeting_id: int, *, resc
             room.invitation_hash = None
 
 
-async def close_room(session: AsyncSession, meeting_id: int, manager_id: int):
+async def close_room(session: AsyncSession, meeting_id: int, manager_id: int, *, admin=False):
     async with transaction(session):
-        await owned_meeting(session, meeting_id, manager_id)
+        await owned_meeting(session, meeting_id, manager_id, admin=admin)
         await invalidate_for_meeting(session, meeting_id)
 
 

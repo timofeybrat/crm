@@ -2,17 +2,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from crm.core.errors import InvalidOperation
 from crm.db.transactions import transaction
+from crm.modules.auth.permissions import require_meeting_access
+from crm.modules.auth.schemas import UserRead
 from crm.modules.calls import repository
 from crm.modules.calls.schemas import CallCreate, CallRead
 from crm.modules.companies.repository import get_company
 from crm.modules.meetings.repository import get_meeting
 
 
-async def record_call(session: AsyncSession, data: CallCreate) -> CallRead:
+async def record_call(session: AsyncSession, data: CallCreate, user: UserRead) -> CallRead:
     async with transaction(session):
         if data.meeting_id is not None:
             # Lock before the company: prevents cancellation during link validation.
             meeting = await get_meeting(session, data.meeting_id, lock=True)
+            require_meeting_access(user, meeting.manager_id)
             if meeting.company_id != data.company_id:
                 raise InvalidOperation("Meeting belongs to another company")
             if meeting.status != "scheduled":

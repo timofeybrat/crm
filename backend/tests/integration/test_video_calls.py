@@ -16,7 +16,7 @@ from crm.modules.video_calls.service import reconcile
 KEY = "test-manager-key-" + "a" * 32
 OTHER_KEY = "test-manager-key-" + "b" * 32
 API_SECRET = "test-livekit-secret-" + "c" * 32
-AUTH = {"Authorization": f"Bearer {KEY}"}
+AUTH = {}
 
 
 class FakeGateway:
@@ -41,7 +41,7 @@ class FakeGateway:
 
 
 @pytest.fixture
-def video(db, test_database_url):
+def video(db, test_database_url, login_as):
     settings = Settings(
         database_url=test_database_url,
         video_enabled=True,
@@ -51,6 +51,7 @@ def video(db, test_database_url):
     )
     app = create_app(settings)
     with TestClient(app) as client:
+        login_as(client, role="admin")
         fake = FakeGateway(settings)
         app.state.video_gateway = fake
         yield client, fake, app
@@ -82,21 +83,20 @@ def prepare(video, db, *, delta=0):
     return mid, invitation
 
 
-def test_disabled_and_bad_credentials(client, video, db):
+def test_disabled_and_bad_credentials(client, video, db, login_as):
     assert client.get("/video/meetings/1").status_code == 503
-    browser, _, _ = video
+    browser, _, app = video
     mid = meeting(db)
-    assert browser.get(f"/video/meetings/{mid}").status_code == 401
-    assert (
-        browser.get(f"/video/meetings/{mid}", headers={"Authorization": "Bearer wrong"}).status_code
-        == 401
-    )
-    assert (
-        browser.get(
-            f"/video/meetings/{mid}", headers={"Authorization": f"Bearer {OTHER_KEY}"}
-        ).status_code
-        == 403
-    )
+    with TestClient(create_app(app.state.settings)) as anonymous:
+        assert anonymous.get(f"/video/meetings/{mid}").status_code == 401
+        assert (
+            anonymous.get(
+                f"/video/meetings/{mid}", headers={"Authorization": f"Bearer {KEY}"}
+            ).status_code
+            == 401
+        )
+        login_as(anonymous, manager_id=2)
+        assert anonymous.get(f"/video/meetings/{mid}").status_code == 403
     assert browser.get("/video/meetings/999999", headers=AUTH).status_code == 404
 
 

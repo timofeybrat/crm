@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from crm.core.errors import InvalidOperation
 from crm.db.transactions import transaction
+from crm.modules.auth.permissions import require_meeting_access
+from crm.modules.auth.schemas import UserRead
 from crm.modules.companies.repository import get_company
 from crm.modules.managers.repository import get_manager
 from crm.modules.meetings import repository
@@ -13,7 +15,8 @@ from crm.modules.meetings.schemas import MeetingCreate, MeetingPatch, MeetingRea
 from crm.modules.video_calls.service import invalidate_for_meeting
 
 
-async def create_meeting(session: AsyncSession, data: MeetingCreate) -> MeetingRead:
+async def create_meeting(session: AsyncSession, data: MeetingCreate, user: UserRead) -> MeetingRead:
+    require_meeting_access(user, data.manager_id)
     ends_at = meeting_end(data.starts_at)
     async with transaction(session):
         await get_company(session, data.company_id)
@@ -45,9 +48,13 @@ async def update_meeting(
     session: AsyncSession,
     meeting_id: int,
     data: MeetingPatch,
+    user: UserRead,
 ) -> MeetingRead:
     async with transaction(session):
         meeting = await repository.get_meeting(session, meeting_id, lock=True)
+        require_meeting_access(user, meeting.manager_id)
+        if data.action == "reschedule" and data.manager_id is not None:
+            require_meeting_access(user, data.manager_id)
         target = {"cancel": "cancelled", "complete": "completed"}.get(data.action)
         if target == meeting.status:
             return await repository.read_meeting(session, meeting)

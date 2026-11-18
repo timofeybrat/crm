@@ -13,6 +13,37 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from crm.core.config import Settings
 from crm.main import create_app
+from crm.modules.auth.passwords import hash_password
+
+TEST_PASSWORD = "public-test-password-only"
+TEST_HASH = hash_password(TEST_PASSWORD)
+
+
+@pytest.fixture
+def login_as(db):
+    def authenticate(client, manager_id=1, role="manager"):
+        db(
+            "INSERT INTO manager_accounts (manager_id, login, password_hash, role) "
+            "VALUES (:manager, :login, :hash, :role) ON CONFLICT (manager_id) DO NOTHING",
+            {
+                "manager": manager_id,
+                "login": f"manager{manager_id}",
+                "hash": TEST_HASH,
+                "role": role,
+            },
+        )
+        csrf = client.get("/auth/csrf").json()["csrf_token"]
+        response = client.post(
+            "/auth/login",
+            json={"login": f"manager{manager_id}", "password": TEST_PASSWORD},
+            headers={"Origin": "http://localhost:3000", "X-CSRF-Token": csrf},
+        )
+        assert response.status_code == 200
+        client.headers.update(
+            {"Origin": "http://localhost:3000", "X-CSRF-Token": client.cookies.get("crm_csrf")}
+        )
+
+    return authenticate
 
 
 async def execute_sql(url: str, statement: str, params: dict | None = None):
@@ -47,10 +78,11 @@ def test_database_url():
 
 
 @pytest.fixture
-def client(db, test_database_url):
+def client(db, test_database_url, login_as):
     with TestClient(
         create_app(Settings(database_url=test_database_url, video_enabled=False))
     ) as client:
+        login_as(client, role="admin")
         yield client
 
 
