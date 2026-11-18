@@ -1,0 +1,325 @@
+.video-shell {
+  min-height: 100dvh;
+  background: #f6f7fb;
+}
+.video-page {
+  min-height: 100dvh;
+  background: radial-gradient(ellipse at 50% 0, #fcebe2 0, transparent 50%);
+}
+.video-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 86px;
+  padding: 20px max(24px, calc((100vw - 1120px) / 2));
+  border-bottom: 1px solid #e6e7ed;
+  background: #ffffffb0;
+}
+.video-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 27px;
+  font-weight: 750;
+  letter-spacing: -1px;
+}
+.video-brand svg,
+.video-brand > span {
+  color: var(--accent);
+}
+.video-private {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #758094;
+  font-size: 12px;
+  flex: 1;
+}
+.video-header > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.video-content {
+  max-width: 1060px;
+  margin: auto;
+  padding: 44px 24px;
+}
+.video-heading {
+  margin-bottom: 28px;
+}
+.video-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  font-size: 11px;
+  color: #aa6048;
+  font-weight: 650;
+}
+.video-heading h1 {
+  font-size: clamp(27px, 4vw, 39px);
+  letter-spacing: -1.3px;
+  line-height: 1.15;
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.video-heading p,
+.video-access-card > p,
+.video-lobby > p,
+.video-message p {
+  color: #758094;
+  line-height: 1.65;
+}
+.video-access-card {
+  max-width: 510px;
+  margin: 45px auto;
+  padding: 32px;
+  border: 1px solid #e7e9ee;
+  border-radius: 22px;
+  box-shadow: 0 16px 50px #20273808;
+  background: #fff;
+}
+.video-access-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+  color: #b86c51;
+  background: #fcf0e9;
+}
+.video-access-card h2,
+.video-lobby h2 {
+  font-size: 21px;
+  margin: 20px 0 9px;
+  letter-spacing: -0.5px;
+}
+.video-access-card > .button {
+  margin-top: 20px;
+  width: 100%;
+}
+.video-access-card .field {
+  margin-top: 20px;
+}
+.video-meeting-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid #e6e8ef;
+  border-radius: 14px;
+  padding: 18px 22px;
+  margin-bottom: 18px;
+}
+.video-meeting-summary > svg {
+  color: #c18368;
+}
+.video-meeting-summary > div {
+  flex: 1;
+}
+.video-meeting-summary strong,
+.video-meeting-summary span {
+  display: block;
+}
+.video-meeting-summary div > span {
+  color: #758094;
+  font-size: 12px;
+  margin-top: 5px;
+}
+.video-summary-badge {
+  padding: 7px 10px;
+  background: #f5f6fa;
+  border-radius: 7px;
+  font-size: 11px;
+  color: #6f788b;
+}
+.video-management {
+  margin-bottom: 22px;
+}
+.video-management-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.video-invitation {
+  border: 1px solid #e6e8ef;
+  background: #fff;
+  padding: 18px;
+  border-radius: 12px;
+  margin-top: 14px;
+}
+.video-invitation label {
+  font-size: 12px;
+  font-weight: 600;
+}
+.video-invitation > div {
+  display: flex;
+  gap: 8px;
+  margin-top: 9px;
+}
+.video-invitation input {
+  min-width: 0;
+  flex: 1;
+}
+.video-invitation p {
+  color: #758094;
+  font-size: 12px;
+  margin: 10px 0 0;
+}
+.video-lobby {
+  padding: 28px;
+  border-radius: 20px;
+  background: #171d2c;
+  color: #f7f8fc;
+}
+.video-lobby h2 {
+  margin-top: 0;
+}
+.video-lobby > p {
+  color: #a6afc1;
+}
+.video-lobby .lk-prejoin {
+  margin: 24px auto 0;
+  max-width: 440px;
+  width: 100%;
+}
+.video-lobby .lk-username-container input {
+  min-width: 0;
+}
+.video-conference {
+  background: #171d2c;
+  padding: 18px;
+  border-radius: 20px;
+  overflow: hidden;
+  color: #fff;
+}
+.video-call-status {
+  display: flex;
+  justify-content: space-between;
+  color: #a6afc1;
+  font-size: 12px;
+  margin: 0 4px 16px;
+}
+.video-call-status > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.video-call-status > span:first-child svg {
+  color: #8bc8a8;
+}
+.video-stage {
+  height: clamp(260px, 48vw, 490px);
+  position: relative;
+}
+.video-stage .lk-participant-tile {
+  border-radius: 13px;
+}
+.video-stage .lk-grid-layout {
+  padding: 0;
+}
+.video-waiting {
+  position: absolute;
+  bottom: 20px;
+  left: 12px;
+  right: 12px;
+  text-align: center;
+  color: #c0c6d4;
+  font-size: 12px;
+  pointer-events: none;
+  background: #171d2cbb;
+  padding: 8px;
+  border-radius: 8px;
+}
+.video-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 20px;
+}
+.video-controls button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  min-height: 44px;
+}
+.video-controls button[data-lk-enabled="false"] {
+  background: #4b3542;
+}
+.video-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  color: #8891a1;
+  font-size: 11px;
+  margin-top: 35px;
+  line-height: 1.6;
+  text-align: center;
+}
+.video-message {
+  padding: 56px 24px;
+  text-align: center;
+  border: 1px dashed #d9dde6;
+  border-radius: 18px;
+  background: #ffffff80;
+}
+.video-message > svg {
+  color: #b5836e;
+  margin: 0 auto;
+}
+.video-message h2 {
+  margin: 18px 0 10px;
+  font-size: 20px;
+}
+.video-left {
+  border: 1px solid #47735e;
+  padding: 12px;
+  border-radius: 10px;
+}
+@media (max-width: 600px) {
+  .video-header {
+    min-height: 70px;
+    padding: 15px 18px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .video-private {
+    justify-content: flex-end;
+    font-size: 10px;
+  }
+  .video-content {
+    padding: 28px 16px;
+  }
+  .video-access-card {
+    padding: 24px;
+    margin: 28px auto;
+  }
+  .video-lobby {
+    padding: 20px 14px;
+  }
+  .video-invitation > div {
+    flex-direction: column;
+  }
+  .video-summary-badge {
+    display: none !important;
+  }
+  .video-stage {
+    height: 430px;
+  }
+  .video-conference {
+    padding: 12px;
+  }
+  .video-controls {
+    gap: 7px;
+  }
+  .video-controls button {
+    font-size: 12px;
+    padding: 9px;
+  }
+}

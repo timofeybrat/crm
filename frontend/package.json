@@ -13,14 +13,18 @@
     "lint": "eslint .",
     "test": "node --experimental-strip-types --test tests/datetime.test.ts",
     "test:e2e": "playwright test",
+    "test:e2e:video": "playwright test --config playwright.video.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.0",
+    "@livekit/components-react": "^2.9.25",
+    "@livekit/components-styles": "^1.2.0",
     "@radix-ui/react-dialog": "^1.3.1",
     "@tanstack/react-query": "^5.0.0",
+    "livekit-client": "^2.24.1",
     "lucide-react": "^1.75.0",
     "next": "16.4.6",
     "react": "19.3.1",

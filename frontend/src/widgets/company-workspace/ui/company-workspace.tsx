@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, CalendarPlus, Clock3, History, Phone, Repeat2 } from "lucide-react";
+import { CalendarDays, CalendarPlus, Clock3, History, Phone, Repeat2, Video } from "lucide-react";
 import {
   CompanyAvatar,
   CompanyStatusBadge,
@@ -94,6 +95,15 @@ function Workspace({ id, onClose }: { id: number; onClose: () => void }) {
                 </div>
                 <div className="meeting-meta">{managerName(active.manager_id)} · время Алматы</div>
                 <div className="meeting-actions">
+                  <Link
+                    href={`/video/meetings/${active.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="button button-secondary button-small"
+                  >
+                    <Video size={13} />
+                    Видеосозвон
+                  </Link>
                   <Button
                     variant="ghost"
                     className="button-small"

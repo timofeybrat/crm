@@ -50,6 +50,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       {title}
     </Link>
   ));
+  if (path.startsWith("/video/")) return <div className="video-shell">{children}</div>;
   return (
     <div className="app-shell">
       <a href="#main-content" className="skip-link">

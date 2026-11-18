@@ -3,6 +3,8 @@ import { AppProviders } from "@/app/providers";
 import { WorkspaceShell } from "@/widgets/workspace-shell";
 import { CompanyWorkspace } from "@/widgets/company-workspace";
 import "@/app/styles/globals.css";
+import "@livekit/components-styles";
+import "@/app/styles/video.css";
 
 export const metadata: Metadata = {
   title: "Пульс — CRM команды",

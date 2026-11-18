@@ -1,6 +1,18 @@
 import { ApiError } from "@/shared/api";
 
 const messages: Record<string, string> = {
+  "Video calls are disabled":
+    "Видеосвязь отключена. Включите интеграцию LiveKit в настройках backend.",
+  "Invalid manager key": "Неверный ключ менеджера. Проверьте личный ключ доступа.",
+  "Video room belongs to another manager": "Эта встреча назначена другому менеджеру.",
+  "Invitation is invalid or expired":
+    "Приглашение недействительно или отозвано. Запросите новую ссылку у менеджера.",
+  "Video room is closed": "Видеокомната закрыта: созвон завершён или встреча отменена.",
+  "Video access window has ended": "Время доступа к видеовстрече истекло.",
+  "Video room opens 15 minutes before the meeting":
+    "Подключиться можно за 15 минут до начала встречи.",
+  "Video room not found": "Комната ещё не создана. Попросите менеджера подготовить созвон.",
+  "Video service unavailable": "Медиасервер временно недоступен. Повторите вход немного позже.",
   "Company with this BIN already exists": "Организация с таким БИН уже есть в базе.",
   "Company already has an active meeting":
     "У организации уже есть активная встреча. Сначала завершите или отмените её.",
