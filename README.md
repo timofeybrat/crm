@@ -152,6 +152,7 @@ npm run build
 
 Из корня: `docker compose config --quiet`.
 Полный запуск контейнеров требует запущенного Docker Engine.
+Результаты проверки чистого снимка: [docs/verification.md](docs/verification.md).
 
 ## Миграции при дальнейшей разработке
 
