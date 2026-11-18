@@ -12,9 +12,7 @@
 В PDF frontend и Redis не требуются; добавлены по выбранному стеку проекта.
 Redis запускается опционально и пока не участвует в бизнес-процессах.
 
-## Backend
-
-### Расширение видеосвязи после сдачи ТЗ
+## Расширение видеосвязи после сдачи ТЗ
 
 В ветке `feat/video-calls` выбрана LiveKit: официальные React Components для Next.js
 и `livekit-api` для FastAPI. Готовый медиасервер отвечает за WebRTC; backend CRM
@@ -57,6 +55,8 @@ Daily (внешняя платформа с React SDK/REST API) и Jitsi (вст
 [Python SDK](https://github.com/livekit/python-sdks/tree/main/livekit-api),
 [конфигурация сервера](https://github.com/livekit/livekit/blob/master/config-sample.yaml),
 [жизненный цикл токенов](https://docs.livekit.io/frontends/reference/tokens-grants/).
+
+## Backend
 
 Код группируем по предметным областям, а не по глобальным папкам всех роутеров,
 сервисов и репозиториев. Точки входа и общая инфраструктура остаются отдельно:
