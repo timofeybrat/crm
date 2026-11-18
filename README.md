@@ -14,6 +14,7 @@ Frontend показывает стартовую страницу. Бизнес-
 REFLECTION.md будет написан по фактическим результатам реализации.
 
 Рекомендации и спорные требования: [docs/architecture.md](docs/architecture.md).
+Принятые правила MVP: [docs/api-contract.md](docs/api-contract.md).
 План оставшихся работ по приоритету: [docs/tasks.md](docs/tasks.md).
 
 ## Запуск Docker Compose
