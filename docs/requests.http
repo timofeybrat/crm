@@ -1,6 +1,31 @@
 # Examples for VS Code REST Client. Run named requests in order on a seeded database.
 # IDs are read from previous responses. All timestamps are UTC.
-@baseUrl = http://localhost:8000
+# Copy docs/.env.example to docs/.env and set your own credentials there.
+# REST Client must remember response cookies and trust your local CA for HTTPS.
+@baseUrl = https://localhost:8443/api
+@origin = https://localhost:8443
+
+### Obtain a short-lived login challenge
+# @name csrfBootstrap
+GET {{baseUrl}}/auth/csrf
+
+### Login (password is read from ignored docs/.env)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+Origin: {{origin}}
+X-CSRF-Token: {{csrfBootstrap.response.body.$.csrf_token}}
+
+{
+  "login": "{{$dotenv CRM_BOOTSTRAP_LOGIN}}",
+  "password": "{{$dotenv CRM_BOOTSTRAP_PASSWORD}}"
+}
+
+### Read the rotated CSRF token after login
+# @name activeCsrf
+GET {{baseUrl}}/auth/csrf
+
+### Current authenticated manager
+GET {{baseUrl}}/auth/me
 
 ### Liveness
 GET {{baseUrl}}/health
@@ -14,6 +39,8 @@ GET {{baseUrl}}/managers
 ### Create company A — 201 on a fresh database
 # @name companyA
 POST {{baseUrl}}/companies
+Origin: {{origin}}
+X-CSRF-Token: {{activeCsrf.response.body.$.csrf_token}}
 Content-Type: application/json
 
 {
@@ -24,6 +51,8 @@ Content-Type: application/json
 
 ### Duplicate BIN — 409
 POST {{baseUrl}}/companies
+Origin: {{origin}}
+X-CSRF-Token: {{activeCsrf.response.body.$.csrf_token}}
 Content-Type: application/json
 
 {
@@ -38,6 +67,8 @@ GET {{baseUrl}}/companies?status=new&limit=20&offset=0
 ### Create a meeting: Monday 10:00–11:00 Almaty — 201
 # @name meetingA
 POST {{baseUrl}}/meetings
+Origin: {{origin}}
+X-CSRF-Token: {{activeCsrf.response.body.$.csrf_token}}
 Content-Type: application/json
 
 {
@@ -48,6 +79,8 @@ Content-Type: application/json
 
 ### Record meeting_set linked to that meeting — 201
 POST {{baseUrl}}/calls
+Origin: {{origin}}
+X-CSRF-Token: {{activeCsrf.response.body.$.csrf_token}}
 Content-Type: application/json
 
 {
@@ -58,6 +91,8 @@ Content-Type: application/json
 
 ### Missing meeting link — 422
 POST {{baseUrl}}/calls
+Origin: {{origin}}
+X-CSRF-Token: {{activeCsrf.response.body.$.csrf_token}}
 Content-Type: application/json
 
 {
@@ -71,6 +106,8 @@ GET {{baseUrl}}/managers/1/schedule?date=2026-11-23
 ### Create company B
 # @name companyB
 POST {{baseUrl}}/companies
+Origin: {{origin}}
+X-CSRF-Token: {{activeCsrf.response.body.$.csrf_token}}
 Content-Type: application/json
 
 {
@@ -81,6 +118,8 @@ Content-Type: application/json
 
 ### Overlap with company A's meeting — 409
 POST {{baseUrl}}/meetings
+Origin: {{origin}}
+X-CSRF-Token: {{activeCsrf.response.body.$.csrf_token}}
 Content-Type: application/json
 
 {
@@ -91,6 +130,8 @@ Content-Type: application/json
 
 ### Does not fit the workday: 17:30–18:30 Almaty — 422
 POST {{baseUrl}}/meetings
+Origin: {{origin}}
+X-CSRF-Token: {{activeCsrf.response.body.$.csrf_token}}
 Content-Type: application/json
 
 {
@@ -101,6 +142,8 @@ Content-Type: application/json
 
 ### Record no_answer for company B — 201
 POST {{baseUrl}}/calls
+Origin: {{origin}}
+X-CSRF-Token: {{activeCsrf.response.body.$.csrf_token}}
 Content-Type: application/json
 
 {
@@ -110,6 +153,8 @@ Content-Type: application/json
 
 ### Record refused for company B — 201 (last call sets company status)
 POST {{baseUrl}}/calls
+Origin: {{origin}}
+X-CSRF-Token: {{activeCsrf.response.body.$.csrf_token}}
 Content-Type: application/json
 
 {
@@ -119,6 +164,8 @@ Content-Type: application/json
 
 ### Reschedule A to Tuesday, manager 2 — 200 with full history
 PATCH {{baseUrl}}/meetings/{{meetingA.response.body.$.id}}
+Origin: {{origin}}
+X-CSRF-Token: {{activeCsrf.response.body.$.csrf_token}}
 Content-Type: application/json
 
 {
@@ -135,6 +182,8 @@ GET {{baseUrl}}/managers/2/schedule?date=2026-11-24
 
 ### Cancel A — 200, releases the company and manager slot
 PATCH {{baseUrl}}/meetings/{{meetingA.response.body.$.id}}
+Origin: {{origin}}
+X-CSRF-Token: {{activeCsrf.response.body.$.csrf_token}}
 Content-Type: application/json
 
 {"action": "cancel"}

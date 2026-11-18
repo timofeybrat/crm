@@ -1,0 +1,56 @@
+# Local trusted-CA HTTPS/WSS; set domains/ports/bind address in .env for a public deployment.
+services:
+  gateway:
+    image: caddy:2-alpine
+    environment:
+      CRM_APP_ADDRESS: ${CRM_APP_ADDRESS:-localhost}
+      CRM_MEDIA_ADDRESS: ${CRM_MEDIA_ADDRESS:-localhost:444}
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    ports:
+      - "${CRM_HTTPS_BIND_ADDRESS:-127.0.0.1}:${CRM_HTTPS_PORT:-8443}:443"
+      - "${CRM_HTTPS_BIND_ADDRESS:-127.0.0.1}:${CRM_MEDIA_HTTPS_PORT:-8444}:444"
+      - "${CRM_HTTPS_BIND_ADDRESS:-127.0.0.1}:${CRM_HTTP_PORT:-8080}:80"
+    networks: [secure]
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+      livekit:
+        condition: service_started
+
+  backend:
+    ports: !reset []
+    networks: [default, secure]
+    environment:
+      CRM_ENVIRONMENT: production
+      CRM_SESSION_COOKIE_SECURE: "true"
+      CRM_FRONTEND_URL: ${CRM_HTTPS_FRONTEND_URL:-https://localhost:8443}
+      CRM_CORS_ORIGINS: '["${CRM_HTTPS_FRONTEND_URL:-https://localhost:8443}"]'
+      CRM_LIVEKIT_PUBLIC_URL: ${CRM_HTTPS_LIVEKIT_PUBLIC_URL:-wss://localhost:8444}
+      CRM_TRUSTED_PROXY_CIDRS: '["${CRM_SECURE_SUBNET:-172.30.80.0/24}"]'
+
+  frontend:
+    ports: !reset []
+    networks: [default, secure]
+    build:
+      target: production
+
+  livekit:
+    networks: [default, secure]
+    ports: !override
+      - "127.0.0.1:7881:7881"
+      - "127.0.0.1:7882:7882/udp"
+
+networks:
+  secure:
+    ipam:
+      config:
+        - subnet: ${CRM_SECURE_SUBNET:-172.30.80.0/24}
+
+volumes:
+  caddy_data:
+  caddy_config:

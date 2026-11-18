@@ -1,0 +1,12 @@
+https://localhost {
+    handle_path /api/* {
+        reverse_proxy host.docker.internal:18001
+    }
+    handle {
+        reverse_proxy host.docker.internal:3001
+    }
+}
+
+https://localhost:444 {
+    reverse_proxy livekit-test:17880
+}

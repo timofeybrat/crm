@@ -1,0 +1,23 @@
+{$CRM_APP_ADDRESS:localhost} {
+    request_body {
+        max_size 1MB
+    }
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy no-referrer
+        Permissions-Policy "camera=(self), microphone=(self), geolocation=()"
+    }
+    @public not host localhost 127.0.0.1
+    header @public Strict-Transport-Security "max-age=31536000"
+    handle_path /api/* {
+        reverse_proxy backend:8000
+    }
+    handle {
+        reverse_proxy frontend:3000
+    }
+}
+
+{$CRM_MEDIA_ADDRESS:localhost:444} {
+    reverse_proxy livekit:7880
+}

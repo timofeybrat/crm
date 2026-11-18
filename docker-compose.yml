@@ -27,7 +27,7 @@ services:
       CRM_LIVEKIT_PUBLIC_URL: ${CRM_LIVEKIT_PUBLIC_URL:-ws://localhost:7880}
       CRM_LIVEKIT_API_KEY: ${CRM_LIVEKIT_API_KEY:-}
       CRM_LIVEKIT_API_SECRET: ${CRM_LIVEKIT_API_SECRET:-}
-      CRM_VIDEO_MANAGER_KEYS: "${CRM_VIDEO_MANAGER_KEYS:-{}}"
+      CRM_SESSION_COOKIE_SECURE: ${CRM_SESSION_COOKIE_SECURE:-false}
       CRM_FRONTEND_URL: ${CRM_FRONTEND_URL:-http://localhost:3000}
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
@@ -93,6 +93,16 @@ services:
       - "127.0.0.1:17881:17881"
       - "127.0.0.1:17882:17882/udp"
 
+  gateway-test:
+    image: caddy:2-alpine
+    profiles: ["test-tls"]
+    volumes:
+      - ./infra/Caddyfile.test:/etc/caddy/Caddyfile:ro
+      - caddy_test_data:/data
+    ports:
+      - "127.0.0.1:18443:443"
+      - "127.0.0.1:18444:444"
+
   postgres-test:
     image: postgres:17-alpine
     profiles: ["test"]
@@ -113,3 +123,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  caddy_test_data:

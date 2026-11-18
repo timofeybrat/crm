@@ -46,6 +46,7 @@ export function SignInForm() {
       <Field label="Логин" htmlFor="login-name" error={errors.login?.message}>
         <input
           id="login-name"
+          className="input"
           autoComplete="username"
           autoCapitalize="none"
           spellCheck={false}
@@ -56,6 +57,7 @@ export function SignInForm() {
       <Field label="Пароль" htmlFor="login-password" error={errors.password?.message}>
         <input
           id="login-password"
+          className="input"
           type="password"
           autoComplete="current-password"
           {...register("password")}
