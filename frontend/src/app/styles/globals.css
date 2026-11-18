@@ -4,6 +4,8 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--canvas); color: var(--ink); font-family: "Inter", "Segoe UI", Arial, sans-serif; font-size: 14px; -webkit-font-smoothing: antialiased; }
 button, input, select { font: inherit; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.outcome-button { cursor: pointer; }.outcome-button:has(input:focus-visible) { outline: 3px solid #929eea; outline-offset: 2px; }
 button, a, input, select { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .5; }
