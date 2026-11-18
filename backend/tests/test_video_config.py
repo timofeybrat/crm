@@ -21,12 +21,11 @@ def test_enabled_video_refuses_weak_secrets_without_echoing_them():
     assert secret not in str(error.value)
 
 
-def test_enabled_video_needs_manager_credentials():
-    with pytest.raises(ValidationError, match="CRM_VIDEO_MANAGER_KEYS"):
-        Settings(
-            _env_file=None,
-            video_enabled=True,
-            livekit_api_key=SecretStr("local"),
-            livekit_api_secret=SecretStr("test-secret-" + "a" * 32),
-            video_manager_keys={},
-        )
+def test_video_uses_sessions_without_static_manager_keys():
+    settings = Settings(
+        _env_file=None,
+        video_enabled=True,
+        livekit_api_key=SecretStr("local"),
+        livekit_api_secret=SecretStr("test-secret-" + "a" * 32),
+    )
+    assert settings.video_enabled

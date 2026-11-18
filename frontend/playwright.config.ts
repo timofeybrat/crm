@@ -2,7 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: "crm.spec.ts",
+  testMatch: ["crm.spec.ts", "auth.spec.ts"],
   fullyParallel: false,
   workers: 1,
   retries: 0,

@@ -15,6 +15,7 @@ import {
 } from "@/shared/lib/datetime";
 import { Button, ErrorNotice, Loading } from "@/shared/ui";
 import { plural } from "@/shared/lib/plural";
+import { useSession } from "@/entities/session";
 
 export function ScheduleBoard({
   date,
@@ -30,6 +31,8 @@ export function ScheduleBoard({
   onCreate: (time: string) => void;
 }) {
   const query = useQuery(scheduleOptions(managerId, date));
+  const { user } = useSession();
+  const canCreate = user?.role === "admin" || user?.manager_id === managerId;
   const open = useCompanyPanel((state) => state.open);
   const weekday = new Date(`${date}T12:00:00Z`).getUTCDay();
   const monday = shiftDay(date, -((weekday + 6) % 7));
@@ -127,7 +130,11 @@ export function ScheduleBoard({
                 {hour < 18 && (
                   <button
                     className="timeline-add"
-                    disabled={!isWeekday(date) || isBusy(`${String(hour).padStart(2, "0")}:00`)}
+                    disabled={
+                      !canCreate ||
+                      !isWeekday(date) ||
+                      isBusy(`${String(hour).padStart(2, "0")}:00`)
+                    }
                     aria-label={`Назначить встречу на ${String(hour).padStart(2, "0")}:00`}
                     onClick={() => onCreate(`${String(hour).padStart(2, "0")}:00`)}
                   >

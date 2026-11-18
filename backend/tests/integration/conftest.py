@@ -92,12 +92,14 @@ def db(test_database_url):
         return asyncio.run(execute_sql(test_database_url, statement, params))
 
     execute(
-        "TRUNCATE video_cleanup, calls, meeting_history, meetings, companies, managers "
+        "TRUNCATE auth_rate_buckets, video_cleanup, calls, meeting_history, "
+        "meetings, companies, managers "
         "RESTART IDENTITY CASCADE"
     )
     execute("INSERT INTO managers (id, name) VALUES (1, 'Demo 1'), (2, 'Demo 2')")
     yield execute
     execute(
-        "TRUNCATE video_cleanup, calls, meeting_history, meetings, companies, managers "
+        "TRUNCATE auth_rate_buckets, video_cleanup, calls, meeting_history, "
+        "meetings, companies, managers "
         "RESTART IDENTITY CASCADE"
     )

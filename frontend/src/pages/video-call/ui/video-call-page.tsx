@@ -11,7 +11,9 @@ import {
 } from "@/entities/video-call";
 import { VideoManagement } from "@/features/manage-video-call";
 import { VideoRoom, type RoomProviderComponent } from "@/widgets/video-room";
-import { Button, ErrorNotice, Field } from "@/shared/ui";
+import { Button, ErrorNotice } from "@/shared/ui";
+import { useSession } from "@/entities/session";
+import { SignOutButton } from "@/features/sign-out";
 import { almatyTime, formatDate } from "@/shared/lib/datetime";
 import { useNow } from "@/shared/lib/use-now";
 import { ApiError } from "@/shared/api";
@@ -27,7 +29,7 @@ export function VideoCallPage({
   const [invitation, setInvitation] = useState(() =>
     guest ? (new URLSearchParams(window.location.hash.slice(1)).get("invite") ?? "") : "",
   );
-  const [managerKey, setManagerKey] = useState("");
+  const { user } = useSession();
   const [access, setAccess] = useState<VideoAccess | null>(null);
   const [room, setRoom] = useState<VideoRoomInfo | null>(null);
   const [error, setError] = useState<unknown>(null);
@@ -71,7 +73,7 @@ export function VideoCallPage({
         const updated =
           access.role === "guest"
             ? await getGuestRoom(access.invitation, controller.signal)
-            : await getVideoRoom(access.meetingId, access.key, controller.signal);
+            : await getVideoRoom(access.meetingId, controller.signal);
         if (active) {
           setRoom(updated);
           setError(null);
@@ -102,15 +104,14 @@ export function VideoCallPage({
     setError(null);
     const candidate: VideoAccess = guest
       ? { role: "guest", invitation }
-      : { role: "manager", meetingId: meetingId!, key: managerKey.trim() };
+      : { role: "manager", meetingId: meetingId! };
     try {
       const result =
         candidate.role === "guest"
           ? await getGuestRoom(candidate.invitation)
-          : await getVideoRoom(candidate.meetingId, candidate.key);
+          : await getVideoRoom(candidate.meetingId);
       setAccess(candidate);
       setRoom(result);
-      setManagerKey("");
     } catch (err) {
       setError(err);
     } finally {
@@ -136,6 +137,7 @@ export function VideoCallPage({
             <ArrowLeft size={14} />К расписанию
           </Link>
         )}
+        {!guest && <SignOutButton />}
       </header>
       <main className="video-content">
         <div className="video-heading">
@@ -162,39 +164,18 @@ export function VideoCallPage({
             <span className="video-access-icon">
               <LockKeyhole size={23} />
             </span>
-            <h2>{guest ? "Подключиться как гость" : "Вход менеджера"}</h2>
+            <h2>{guest ? "Подключиться как гость" : `Вы вошли как ${user?.name ?? "менеджер"}`}</h2>
             <p>
               {guest
                 ? "Сначала проверим приглашение. Камера и микрофон останутся выключенными, пока вы сами их не включите."
-                : "Введите личный ключ доступа к видеовстречам. Он действует только для встреч вашего менеджера."}
+                : "Доступ к встрече проверяется по вашей сессии CRM. Дополнительный ключ не нужен."}
             </p>
-            {guest ? (
-              !invitation && (
-                <ErrorNotice error="В ссылке нет приглашения. Откройте полную ссылку, которую прислал менеджер." />
-              )
-            ) : (
-              <Field
-                label="Ключ менеджера"
-                htmlFor="video-manager-key"
-                hint="Ключ используется в этой вкладке и не сохраняется в браузере."
-              >
-                <input
-                  id="video-manager-key"
-                  type="password"
-                  autoComplete="off"
-                  required
-                  maxLength={256}
-                  value={managerKey}
-                  onChange={(e) => setManagerKey(e.target.value)}
-                  placeholder="Личный ключ доступа"
-                />
-              </Field>
-            )}
-            <Button
-              type="submit"
-              loading={pending}
-              disabled={guest ? !invitation : !managerKey.trim()}
-            >
+            {guest
+              ? !invitation && (
+                  <ErrorNotice error="В ссылке нет приглашения. Откройте полную ссылку, которую прислал менеджер." />
+                )
+              : null}
+            <Button type="submit" loading={pending} disabled={guest ? !invitation : !user}>
               {guest ? "Проверить приглашение" : "Открыть встречу"}
             </Button>
           </form>
@@ -214,7 +195,6 @@ export function VideoCallPage({
             {access.role === "manager" && (
               <VideoManagement
                 room={room}
-                managerKey={access.key}
                 onChange={setRoom}
                 onClosed={() => setSession((s) => s + 1)}
               />

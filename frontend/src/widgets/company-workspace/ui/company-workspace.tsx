@@ -12,6 +12,7 @@ import {
 } from "@/entities/company";
 import { managersOptions } from "@/entities/manager";
 import type { Meeting } from "@/entities/meeting";
+import { useSession } from "@/entities/session";
 import { MeetingActions, MeetingEditor } from "@/features/manage-meeting";
 import { RecordCallForm } from "@/features/record-call";
 import { almatyTime, formatDate } from "@/shared/lib/datetime";
@@ -20,6 +21,7 @@ import { workspaceOptions } from "../model/query";
 import { MeetingHistory } from "./meeting-history";
 
 function Workspace({ id, onClose }: { id: number; onClose: () => void }) {
+  const { user } = useSession();
   const query = useQuery(workspaceOptions(id));
   const managers = useQuery(managersOptions);
   const [tab, setTab] = useState<"calls" | "meetings">("calls");
@@ -94,7 +96,14 @@ function Workspace({ id, onClose }: { id: number; onClose: () => void }) {
                   {almatyTime(active.starts_at)}–{almatyTime(active.ends_at)}
                 </div>
                 <div className="meeting-meta">{managerName(active.manager_id)} · время Алматы</div>
-                <div className="meeting-actions">
+                <div
+                  className="meeting-actions"
+                  style={
+                    user?.role !== "admin" && user?.manager_id !== active.manager_id
+                      ? { display: "none" }
+                      : undefined
+                  }
+                >
                   <Link
                     href={`/video/meetings/${active.id}`}
                     target="_blank"

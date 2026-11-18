@@ -8,6 +8,7 @@ import { CalendarCheck, PhoneMissed, PhoneOff, Phone, ArrowRight } from "lucide-
 import { companyKeys, type Company } from "@/entities/company";
 import { recordCall, type CallResult } from "@/entities/call";
 import type { Meeting } from "@/entities/meeting";
+import { useSession } from "@/entities/session";
 import { almatyTime, formatDate } from "@/shared/lib/datetime";
 import { Button, ErrorNotice, useToast } from "@/shared/ui";
 
@@ -28,6 +29,7 @@ export function RecordCallForm({
   onSchedule: () => void;
 }) {
   const cache = useQueryClient();
+  const { user } = useSession();
   const notify = useToast();
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -59,7 +61,13 @@ export function RecordCallForm({
               type="radio"
               className="sr-only"
               value={value}
-              disabled={mutation.isPending}
+              disabled={
+                mutation.isPending ||
+                (value === "meeting_set" &&
+                  !!meeting &&
+                  user?.role !== "admin" &&
+                  user?.manager_id !== meeting.manager_id)
+              }
               {...form.register("result", { onChange: () => mutation.reset() })}
             />
             <Icon size={19} />

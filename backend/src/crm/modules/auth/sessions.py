@@ -8,7 +8,7 @@ from fastapi import Depends, HTTPException, Request, Response
 from sqlalchemy import delete, select
 
 from crm.modules.auth.accounts import authenticate_account
-from crm.modules.auth.models import AuthSession, ManagerAccount
+from crm.modules.auth.models import AuthSession, ManagerAccount, RateBucket
 from crm.modules.auth.schemas import UserRead
 from crm.modules.managers.models import Manager
 
@@ -92,6 +92,7 @@ async def current_user(request: Request) -> UserRead:
             raise HTTPException(401, "Authentication required")
         account, manager = result
         return UserRead(
+            session_hash=record.id_hash,
             account_id=account.id,
             manager_id=manager.id,
             name=manager.name,
@@ -187,3 +188,4 @@ async def logout(request: Request, response: Response):
 async def prune_sessions(session_factory):
     async with session_factory() as session, session.begin():
         await session.execute(delete(AuthSession).where(AuthSession.expires_at < datetime.now(UTC)))
+        await session.execute(delete(RateBucket).where(RateBucket.expires_at < datetime.now(UTC)))

@@ -12,6 +12,7 @@ class VideoRoom(Base):
     meeting_id: Mapped[int] = mapped_column(ForeignKey("meetings.id"), primary_key=True)
     room_name: Mapped[str] = mapped_column(String(100), unique=True)
     invitation_hash: Mapped[str | None] = mapped_column(String(64), unique=True)
+    host_session_hash: Mapped[str | None] = mapped_column(String(64))
     closed: Mapped[bool] = mapped_column(default=False, server_default="false")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

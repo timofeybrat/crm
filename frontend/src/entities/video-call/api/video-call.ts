@@ -6,39 +6,31 @@ import {
   type VideoAccess,
 } from "../model/video-call";
 
-function managerHeaders(key: string) {
-  return { Authorization: `Bearer ${key}` };
-}
-
-export async function getVideoRoom(meetingId: number, key: string, signal?: AbortSignal) {
+export async function getVideoRoom(meetingId: number, signal?: AbortSignal) {
   return videoRoomSchema.parse(
     await apiRequest(`/video/meetings/${meetingId}`, {
-      headers: managerHeaders(key),
       cache: "no-store",
       signal,
     }),
   );
 }
-export async function createVideoRoom(meetingId: number, key: string) {
+export async function createVideoRoom(meetingId: number) {
   return videoRoomSchema.parse(
     await apiRequest(`/video/meetings/${meetingId}/room`, {
       method: "POST",
-      headers: managerHeaders(key),
     }),
   );
 }
-export async function inviteVideoGuest(meetingId: number, key: string) {
+export async function inviteVideoGuest(meetingId: number) {
   return invitationSchema.parse(
     await apiRequest(`/video/meetings/${meetingId}/invitation`, {
       method: "POST",
-      headers: managerHeaders(key),
     }),
   );
 }
-export async function closeVideoRoom(meetingId: number, key: string) {
+export async function closeVideoRoom(meetingId: number) {
   await apiRequest(`/video/meetings/${meetingId}/close`, {
     method: "POST",
-    headers: managerHeaders(key),
   });
 }
 export async function getGuestRoom(invitation: string, signal?: AbortSignal) {
@@ -56,7 +48,6 @@ export async function joinVideoRoom(access: VideoAccess, name: string) {
   return connectionSchema.parse(
     await apiRequest(path, {
       method: "POST",
-      headers: access.role === "manager" ? managerHeaders(access.key) : undefined,
       body: JSON.stringify({
         name,
         ...(access.role === "guest" ? { invitation: access.invitation } : {}),

@@ -3,13 +3,14 @@ import secrets
 from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from crm.core.config import Settings
 from crm.core.errors import Conflict, NotFound
 from crm.db.transactions import transaction
+from crm.modules.auth.models import AuthSession, ManagerAccount
 from crm.modules.companies.repository import get_company
 from crm.modules.managers.repository import get_manager
 from crm.modules.meetings.models import Meeting
@@ -61,6 +62,21 @@ async def read_room(session: AsyncSession, meeting: Meeting) -> RoomRead:
     )
 
 
+async def check_host_session(session: AsyncSession, room: VideoRoom):
+    if room.host_session_hash:
+        host = await session.get(AuthSession, room.host_session_hash)
+        account = (
+            await session.get(ManagerAccount, host.account_id) if host and host.account_id else None
+        )
+        if (
+            host is None
+            or host.expires_at <= datetime.now(UTC)
+            or account is None
+            or not account.enabled
+        ):
+            raise Conflict("Video room is closed")
+
+
 async def manager_room(
     session: AsyncSession, meeting_id: int, manager_id: int, create=False, *, admin=False
 ):
@@ -108,6 +124,7 @@ async def guest_meeting(session: AsyncSession, invitation: str):
     if room is None or room.invitation_hash != digest:
         raise HTTPException(403, "Invitation is invalid or expired")
     check_active(meeting, room)
+    await check_host_session(session, room)
     return meeting, room
 
 
@@ -127,6 +144,7 @@ async def connect(
     manager_id: int | None = None,
     invitation: str | None = None,
     admin: bool = False,
+    host_session_hash: str | None = None,
 ):
     async with transaction(session):
         if invitation is not None:
@@ -139,11 +157,14 @@ async def connect(
         check_active(meeting, room)
         if room is None:
             raise NotFound("Video room not found")
+        await check_host_session(session, room)
         if datetime.now(UTC) < window(meeting)[0]:
             raise Conflict("Video room opens 15 minutes before the meeting")
         # Bounded media request under the meeting lock prevents a concurrent
         # cancellation from issuing credentials for the old meeting generation.
         await gateway.ensure_room(room.room_name)
+        if invitation is None:
+            room.host_session_hash = host_session_hash
         return ConnectionRead(
             server_url=settings.livekit_public_url,
             room_name=room.room_name,
@@ -178,9 +199,20 @@ async def reconcile(session_factory, gateway: LiveKitGateway):
         expired = await session.scalars(
             select(Meeting)
             .join(VideoRoom, VideoRoom.meeting_id == Meeting.id)
+            .outerjoin(AuthSession, AuthSession.id_hash == VideoRoom.host_session_hash)
+            .outerjoin(ManagerAccount, ManagerAccount.id == AuthSession.account_id)
             .where(
                 ~VideoRoom.closed,
-                Meeting.ends_at < datetime.now(UTC) - timedelta(minutes=15),
+                or_(
+                    Meeting.ends_at < datetime.now(UTC) - timedelta(minutes=15),
+                    VideoRoom.host_session_hash.is_not(None)
+                    & or_(
+                        AuthSession.id_hash.is_(None),
+                        AuthSession.expires_at <= datetime.now(UTC),
+                        ManagerAccount.id.is_(None),
+                        ~ManagerAccount.enabled,
+                    ),
+                ),
             )
             .limit(50)
             .with_for_update(of=Meeting, skip_locked=True)

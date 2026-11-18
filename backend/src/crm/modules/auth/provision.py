@@ -50,15 +50,37 @@ async def provision(manager_id: int, login: str, password: str, role: str):
         await engine.dispose()
 
 
+async def disable(manager_id: int):
+    engine = create_async_engine(get_settings().database_url, hide_parameters=True)
+    try:
+        async with async_sessionmaker(engine)() as session, session.begin():
+            account = await session.scalar(
+                select(ManagerAccount)
+                .where(ManagerAccount.manager_id == manager_id)
+                .with_for_update()
+            )
+            if account is None:
+                raise ValueError("Manager account not found")
+            account.enabled = False
+            await session.execute(delete(AuthSession).where(AuthSession.account_id == account.id))
+    finally:
+        await engine.dispose()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Create or reset a manager account")
     parser.add_argument("--manager-id", type=int)
     parser.add_argument("--login")
     parser.add_argument("--role", choices=["manager", "admin"], default="manager")
     parser.add_argument("--from-env", action="store_true")
+    parser.add_argument("--disable", action="store_true")
     args = parser.parse_args()
     settings = get_settings()
     manager_id = args.manager_id or settings.bootstrap_manager_id
+    if args.disable:
+        asyncio.run(disable(manager_id))
+        print("Manager account disabled; its sessions revoked.")
+        return
     login = (args.login or settings.bootstrap_login).strip().lower()
     if not re.fullmatch(r"[a-z0-9._@-]{3,64}", login) or manager_id <= 0:
         parser.error("Choose a valid manager ID and login (3-64 ASCII characters)")

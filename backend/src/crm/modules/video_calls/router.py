@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import PositiveInt
 
 from crm.api.dependencies import SessionDep
+from crm.modules.auth.rate_limit import client_address, consume
 from crm.modules.auth.sessions import UserDep
 from crm.modules.video_calls import service
 from crm.modules.video_calls.schemas import (
@@ -60,6 +61,7 @@ async def manager_join(
         meeting_id=meeting_id,
         manager_id=user.manager_id,
         admin=user.role == "admin",
+        host_session_hash=user.session_hash,
     )
 
 
@@ -69,12 +71,14 @@ async def close(meeting_id: PositiveInt, session: SessionDep, user: UserDep):
 
 
 @router.post("/guest", response_model=RoomRead)
-async def guest(data: GuestRequest, session: SessionDep):
+async def guest(data: GuestRequest, session: SessionDep, request: Request):
+    await consume(request, [("video-guest", client_address(request), 60, 60)])
     return await service.guest_room(session, data.invitation.get_secret_value())
 
 
 @router.post("/guest/join", response_model=ConnectionRead)
 async def guest_join(data: GuestJoin, session: SessionDep, request: Request):
+    await consume(request, [("video-join", client_address(request), 20, 60)])
     return await service.connect(
         session,
         request.app.state.video_gateway,

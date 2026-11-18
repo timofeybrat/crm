@@ -1,6 +1,15 @@
 import { ApiError } from "@/shared/api";
 
 const messages: Record<string, string> = {
+  "Authentication required": "Сессия истекла. Войдите в CRM снова.",
+  "Invalid login or password": "Неверный логин или пароль.",
+  "Invalid CSRF token": "Не удалось проверить запрос. Обновите страницу и повторите действие.",
+  "Untrusted request origin":
+    "Запрос отправлен с недопустимого адреса. Откройте CRM по настроенному адресу.",
+  "Meeting belongs to another manager":
+    "Изменять эту встречу может назначенный менеджер или администратор.",
+  "Too many login attempts": "Слишком много попыток входа. Подождите и попробуйте позже.",
+  "Too many requests": "Слишком много запросов. Подождите немного и повторите действие.",
   "Video calls are disabled":
     "Видеосвязь отключена. Включите интеграцию LiveKit в настройках backend.",
   "Invalid manager key": "Неверный ключ менеджера. Проверьте личный ключ доступа.",

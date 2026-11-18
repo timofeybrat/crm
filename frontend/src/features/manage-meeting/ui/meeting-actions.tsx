@@ -8,8 +8,10 @@ import { meetingKeys, updateMeeting, type Meeting } from "@/entities/meeting";
 import { Button, ErrorNotice, Modal, useToast } from "@/shared/ui";
 import { formatDate, almatyTime } from "@/shared/lib/datetime";
 import { useNow } from "@/shared/lib/use-now";
+import { useSession } from "@/entities/session";
 
 export function MeetingActions({ meeting }: { meeting: Meeting }) {
+  const { user } = useSession();
   const [action, setAction] = useState<"cancel" | "complete" | null>(null);
   const cache = useQueryClient();
   const notify = useToast();
@@ -26,7 +28,11 @@ export function MeetingActions({ meeting }: { meeting: Meeting }) {
       setAction(null);
     },
   });
-  if (meeting.status !== "scheduled") return null;
+  if (
+    meeting.status !== "scheduled" ||
+    (user?.role !== "admin" && user?.manager_id !== meeting.manager_id)
+  )
+    return null;
   return (
     <>
       {Date.parse(meeting.ends_at) <= now && (

@@ -14,6 +14,7 @@
     "test": "node --experimental-strip-types --test tests/datetime.test.ts",
     "test:e2e": "playwright test",
     "test:e2e:video": "playwright test --config playwright.video.config.ts",
+    "test:e2e:secure": "playwright test --config playwright.secure.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "next typegen && tsc --noEmit"

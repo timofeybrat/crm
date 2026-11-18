@@ -7,6 +7,7 @@ class LoginRequest(BaseModel):
 
 
 class UserRead(BaseModel):
+    session_hash: str = Field(default="", exclude=True)
     account_id: int
     manager_id: int
     name: str

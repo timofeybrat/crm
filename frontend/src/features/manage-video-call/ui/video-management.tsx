@@ -12,12 +12,10 @@ import { Button, ErrorNotice, Modal, useToast } from "@/shared/ui";
 
 export function VideoManagement({
   room,
-  managerKey,
   onChange,
   onClosed,
 }: {
   room: VideoRoomInfo;
-  managerKey: string;
   onChange: (room: VideoRoomInfo) => void;
   onClosed: () => void;
 }) {
@@ -34,14 +32,14 @@ export function VideoManagement({
     setBusy(true);
     setError(null);
     try {
-      if (action === "create") onChange(await createVideoRoom(room.meeting_id, managerKey));
+      if (action === "create") onChange(await createVideoRoom(room.meeting_id));
       if (action === "invite") {
-        const result = await inviteVideoGuest(room.meeting_id, managerKey);
+        const result = await inviteVideoGuest(room.meeting_id);
         setInvitation(result.url);
         notify("Приглашение готово. Предыдущая ссылка больше не действует для входа.");
       }
       if (action === "close") {
-        await closeVideoRoom(room.meeting_id, managerKey);
+        await closeVideoRoom(room.meeting_id);
         setInvitation("");
         setConfirmClose(false);
         onClosed();

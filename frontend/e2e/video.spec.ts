@@ -1,8 +1,7 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 
 // Public credentials for the isolated livekit-test / crm_test environment only.
-const managerKey = "test-manager-key-for-disposable-local-e2e-only";
-const authorization = { Authorization: `Bearer ${managerKey}` };
+import { loginPage, loginRequest } from "./auth-helpers";
 
 async function mediaInstrumentation(context: BrowserContext) {
   await context.addInitScript(() => {
@@ -47,12 +46,15 @@ async function receivedAudioAndVideo(page: Page) {
 test("two participants exchange real media, leave/rejoin, and manager closes access", async ({
   browser,
   request,
+  baseURL,
 }) => {
   const managerContext = await browser.newContext({
+    ignoreHTTPSErrors: true,
     permissions: ["camera", "microphone"],
     viewport: { width: 1440, height: 1000 },
   });
   const guestContext = await browser.newContext({
+    ignoreHTTPSErrors: true,
     permissions: ["camera", "microphone"],
     viewport: { width: 390, height: 844 },
   });
@@ -63,9 +65,11 @@ test("two participants exchange real media, leave/rejoin, and manager closes acc
   const errors: string[] = [];
   manager.on("pageerror", (e) => errors.push(e.name));
   guest.on("pageerror", (e) => errors.push(e.name));
+  const origin = baseURL ?? "http://127.0.0.1:3001";
+  const authorization = await loginRequest(request, origin);
   try {
-    await manager.goto("http://127.0.0.1:3001/video/meetings/90001");
-    await manager.getByLabel("Ключ менеджера").fill(managerKey);
+    await manager.goto(`${origin}/video/meetings/90001`);
+    await loginPage(manager);
     await manager.getByRole("button", { name: "Открыть встречу" }).click();
     await manager.getByRole("button", { name: "Создать комнату" }).click();
     await manager.getByRole("button", { name: "Пригласить гостя" }).click();
@@ -75,7 +79,7 @@ test("two participants exchange real media, leave/rejoin, and manager closes acc
     await enableDevices(manager);
 
     await guest.goto(invitationUrl);
-    await expect(guest).toHaveURL("http://127.0.0.1:3001/video/guest");
+    await expect(guest).toHaveURL(`${origin}/video/guest`);
     await guest.getByRole("button", { name: "Проверить приглашение" }).click();
     await guest.getByLabel("Ваше имя").fill("Тестовый гость");
     await guest.getByRole("button", { name: "Присоединиться", exact: true }).click();
@@ -120,14 +124,14 @@ test("two participants exchange real media, leave/rejoin, and manager closes acc
     await expect(manager.getByRole("heading", { name: "Созвон завершён" })).toBeVisible();
     await expect(guest.locator(".error-notice")).toBeVisible({ timeout: 20_000 });
     const secret = new URL(invitationUrl).hash.split("=")[1];
-    const denied = await request.post("http://127.0.0.1:18001/video/guest/join", {
+    const denied = await request.post(`${origin}/api/video/guest/join`, {
       data: { invitation: secret, name: "Guest" },
     });
     expect(denied.status()).toBe(403);
     expect(errors).toEqual([]);
   } finally {
     await request
-      .post("http://127.0.0.1:18001/video/meetings/90001/close", {
+      .post(`${origin}/api/video/meetings/90001/close`, {
         headers: authorization,
       })
       .catch(() => undefined);

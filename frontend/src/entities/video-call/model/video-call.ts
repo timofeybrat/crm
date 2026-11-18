@@ -20,4 +20,4 @@ export const invitationSchema = z.object({ url: z.string(), expires_at: z.string
 export type VideoRoomInfo = z.infer<typeof videoRoomSchema>;
 export type VideoConnection = z.infer<typeof connectionSchema>;
 export type VideoAccess =
-  { role: "manager"; meetingId: number; key: string } | { role: "guest"; invitation: string };
+  { role: "manager"; meetingId: number } | { role: "guest"; invitation: string };

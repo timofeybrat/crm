@@ -14,6 +14,8 @@ import {
 import type { ReactNode } from "react";
 import { almatyTime, formatDate } from "@/shared/lib/datetime";
 import { useNow } from "@/shared/lib/use-now";
+import { useSession } from "@/entities/session";
+import { SignOutButton } from "@/features/sign-out";
 
 const links = [
   { href: "/companies", title: "Организации", Icon: Building2 },
@@ -37,6 +39,7 @@ function Brand({ mobile = false }: { mobile?: boolean }) {
 }
 export function WorkspaceShell({ children }: { children: ReactNode }) {
   const path = usePathname() ?? "/companies";
+  const { user } = useSession();
   const now = useNow();
   const active = links.find((item) => path.startsWith(item.href));
   const navigation = links.map(({ href, title, Icon }) => (
@@ -50,7 +53,8 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       {title}
     </Link>
   ));
-  if (path.startsWith("/video/")) return <div className="video-shell">{children}</div>;
+  if (path.startsWith("/video/") || path === "/login")
+    return <div className="video-shell">{children}</div>;
   return (
     <div className="app-shell">
       <a href="#main-content" className="skip-link">
@@ -76,10 +80,13 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
               <Users size={16} />
             </span>
             <div>
-              <div className="team-name">Команда продаж</div>
-              <div className="team-subtitle">Всё начинается с контакта</div>
+              <div className="team-name">{user?.name ?? "Команда продаж"}</div>
+              <div className="team-subtitle">
+                {user?.role === "admin" ? "Администратор" : "Менеджер"}
+              </div>
             </div>
           </div>
+          <SignOutButton />
         </div>
       </aside>
       <div className="app-main">

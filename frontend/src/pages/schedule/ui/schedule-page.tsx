@@ -6,12 +6,14 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { CalendarPlus, Info } from "lucide-react";
 import { managersOptions } from "@/entities/manager";
+import { useSession } from "@/entities/session";
 import { MeetingEditor } from "@/features/manage-meeting";
 import { ScheduleBoard } from "@/widgets/schedule";
 import { almatyDate } from "@/shared/lib/datetime";
 import { Button, ErrorNotice, Loading } from "@/shared/ui";
 
 function ScheduleContent() {
+  const { user } = useSession();
   const params = useSearchParams() ?? new URLSearchParams();
   const managers = useQuery(managersOptions);
   const dayParam = z.iso.date().safeParse(params.get("date"));
@@ -20,7 +22,9 @@ function ScheduleContent() {
       ? dayParam.data
       : almatyDate();
   const selected =
-    managers.data?.find((item) => item.id === Number(params.get("manager"))) ?? managers.data?.[0];
+    managers.data?.find((item) => item.id === Number(params.get("manager"))) ??
+    managers.data?.find((item) => item.id === user?.manager_id) ??
+    managers.data?.[0];
   const [editorTime, setEditorTime] = useState<string | null>(null);
   function update(values: { date?: string; manager?: number }) {
     const next = new URLSearchParams(window.location.search);
@@ -39,7 +43,7 @@ function ScheduleContent() {
         </div>
         <Button
           aria-label="Назначить встречу"
-          disabled={!selected}
+          disabled={!selected || (user?.role !== "admin" && user?.manager_id !== selected.id)}
           onClick={() => setEditorTime("10:00")}
         >
           <CalendarPlus size={16} />

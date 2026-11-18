@@ -28,3 +28,11 @@ class AuthSession(Base):
     )
     csrf_hash: Mapped[str] = mapped_column(String(64))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class RateBucket(Base):
+    __tablename__ = "auth_rate_buckets"
+
+    id_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    attempts: Mapped[int] = mapped_column()
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)

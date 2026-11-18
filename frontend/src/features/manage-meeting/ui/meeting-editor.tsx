@@ -8,6 +8,7 @@ import { z } from "zod";
 import { CalendarPlus, Clock3, CheckCircle2 } from "lucide-react";
 import { CompanyPicker, companyKeys, type Company } from "@/entities/company";
 import { managersOptions } from "@/entities/manager";
+import { useSession } from "@/entities/session";
 import {
   createMeeting,
   updateMeeting,
@@ -55,12 +56,14 @@ export function MeetingEditor({
   const cache = useQueryClient();
   const notify = useToast();
   const managers = useQuery(managersOptions);
+  const { user } = useSession();
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
       date: meeting ? almatyDate(meeting.starts_at) : (date ?? almatyDate()),
       time: meeting ? almatyTime(meeting.starts_at) : (time ?? "10:00"),
-      managerId: meeting?.manager_id ?? managerId ?? 0,
+      managerId:
+        user?.role === "manager" ? user.manager_id : (meeting?.manager_id ?? managerId ?? 0),
       saveCall: true,
     },
   });
@@ -236,11 +239,13 @@ export function MeetingEditor({
                 {...form.register("managerId", { valueAsNumber: true })}
               >
                 <option value={0}>Выберите менеджера</option>
-                {managers.data?.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
+                {managers.data
+                  ?.filter((item) => user?.role === "admin" || item.id === user?.manager_id)
+                  .map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
               </select>
             </Field>
             {managers.isError && (

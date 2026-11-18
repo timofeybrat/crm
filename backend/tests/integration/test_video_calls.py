@@ -47,7 +47,6 @@ def video(db, test_database_url, login_as):
         video_enabled=True,
         livekit_api_key=SecretStr("test-api-key"),
         livekit_api_secret=SecretStr(API_SECRET),
-        video_manager_keys={1: SecretStr(KEY), 2: SecretStr(OTHER_KEY)},
     )
     app = create_app(settings)
     with TestClient(app) as client:
@@ -254,3 +253,17 @@ def test_expired_rooms_are_closed_by_reconciler(video, db):
     assert db("SELECT closed FROM video_rooms")[0]["closed"]
     assert len(fake.deleted) == 1
     assert db("SELECT status FROM meetings")[0]["status"] == "scheduled"
+
+
+def test_logout_revokes_host_and_guest_media_access(video, db):
+    client, fake, app = video
+    mid, invitation = prepare(video, db)
+    assert client.post(f"/video/meetings/{mid}/join", json={"name": "Manager"}).status_code == 200
+    assert db("SELECT host_session_hash FROM video_rooms")[0]["host_session_hash"]
+    assert client.post("/auth/logout").status_code == 204
+    assert client.post(
+        "/video/guest/join", json={"invitation": invitation, "name": "Guest"}
+    ).status_code in {403, 409}
+    client.portal.call(reconcile, app.state.session_factory, fake)
+    assert db("SELECT closed FROM video_rooms")[0]["closed"]
+    assert len(fake.deleted) == 1

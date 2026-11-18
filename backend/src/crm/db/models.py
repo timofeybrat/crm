@@ -1,6 +1,6 @@
 """Explicit ORM registration for Alembic. No create_all at application startup."""
 
-from crm.modules.auth.models import AuthSession, ManagerAccount
+from crm.modules.auth.models import AuthSession, ManagerAccount, RateBucket
 from crm.modules.calls.models import Call
 from crm.modules.companies.models import Company
 from crm.modules.managers.models import Manager
@@ -9,6 +9,7 @@ from crm.modules.video_calls.models import VideoCleanup, VideoRoom
 
 __all__ = [
     "AuthSession",
+    "RateBucket",
     "Call",
     "Company",
     "Manager",
